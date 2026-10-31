@@ -1,0 +1,16 @@
+# Maps shelf packet API (geocode / reverse / route / nearby) on argo's tailnet address only.
+[Unit]
+Description=Maps shelf packet API
+After=network-online.target tailscaled.service maps-photon.service maps-valhalla.service
+Wants=network-online.target tailscaled.service
+
+[Service]
+User=peacekins
+WorkingDirectory=/home/peacekins/laya-qwen
+ExecStart=/home/peacekins/laya-qwen/.venv/bin/uvicorn laya_qwen.maps_api:app --host 100.108.252.74 --port 8210
+# The tailnet address can appear a little after boot; keep retrying until it does.
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

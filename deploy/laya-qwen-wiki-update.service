@@ -1,0 +1,16 @@
+# Stage 7 nightly updater (DESIGN.md stage 7 Q8/Q12/Q13/Q15): updates a copy of the staging index and swaps the
+# wiki-staging.db pointer only if all five Q13 checks pass. Never opens wiki.db; never restarts laya-qwen.service.
+[Unit]
+Description=laya-qwen stage 7 nightly staging index update
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=peacekins
+WorkingDirectory=/home/peacekins/laya-qwen
+ExecStart=/home/peacekins/laya-qwen/.venv/bin/python -m laya_qwen.wiki_update run
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=20h

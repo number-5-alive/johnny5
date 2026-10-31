@@ -1,0 +1,24 @@
+# Open WebUI in Docker, published only on argo's tailnet address, using the laya-qwen service as its only backend.
+[Unit]
+Description=Open WebUI (laya-qwen front end)
+After=docker.service tailscaled.service laya-qwen.service
+Requires=docker.service
+Wants=tailscaled.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker rm -f open-webui
+ExecStart=/usr/bin/docker run --rm --name open-webui \
+  -p 100.108.252.74:3100:8080 \
+  -v open-webui:/app/backend/data \
+  -e OPENAI_API_BASE_URL=http://100.108.252.74:8100/v1 \
+  -e OPENAI_API_KEY=REPLACE_WITH_YOUR_OWN_KEY \
+  -e ENABLE_OLLAMA_API=false \
+  -e TASK_MODEL_EXTERNAL=qwen-quick \
+  -e WEBUI_NAME=laya-qwen \
+  ghcr.io/open-webui/open-webui:main
+ExecStop=/usr/bin/docker stop open-webui
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

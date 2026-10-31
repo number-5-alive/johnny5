@@ -1,0 +1,18 @@
+# Maps shelf geocoder: Photon 1.3.0 on the GraphHopper USA dump, localhost only (the packet API is the tailnet face).
+[Unit]
+Description=Photon geocoder (maps shelf, USA)
+After=docker.service
+Requires=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker rm -f maps-photon
+ExecStart=/usr/bin/docker run --rm --name maps-photon --memory=8g --user 1000:1000 -e HOME=/tmp \
+  -p 127.0.0.1:2322:2322 -v /home/peacekins/maps-data:/maps \
+  eclipse-temurin:21-jre java -Xmx4g -jar /maps/photon-1.3.0.jar serve -j 4 \
+  -data-dir /maps/photon-usa -listen-ip 0.0.0.0 -default-language en
+ExecStop=/usr/bin/docker stop maps-photon
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

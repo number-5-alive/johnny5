@@ -1,0 +1,9 @@
+[Unit]
+Description=laya-qwen stage 7 staging update at 03:00 Central
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 America/Chicago
+Persistent=true
+
+[Install]
+WantedBy=timers.target

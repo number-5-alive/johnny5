@@ -1,0 +1,17 @@
+# Maps shelf router: Valhalla (car / foot / bike) on the US tiles (memory-mapped tile extract on NVMe); localhost only.
+[Unit]
+Description=Valhalla router (maps shelf, US)
+After=docker.service
+Requires=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker rm -f maps-valhalla
+ExecStart=/usr/bin/docker run --rm --name maps-valhalla --memory=4g \
+  -p 127.0.0.1:8002:8002 -v /home/peacekins/maps-data/valhalla:/work/valhalla:ro \
+  ghcr.io/valhalla/valhalla:latest valhalla_service /work/valhalla/valhalla.json 4
+ExecStop=/usr/bin/docker stop maps-valhalla
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

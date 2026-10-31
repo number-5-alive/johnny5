@@ -1,0 +1,17 @@
+# Stage 6 service: OpenAI-compatible endpoint on argo's tailnet address only.
+[Unit]
+Description=laya-qwen fact-checked answering service
+After=network-online.target tailscaled.service ollama.service
+Wants=network-online.target tailscaled.service ollama.service
+
+[Service]
+User=peacekins
+WorkingDirectory=/home/peacekins/laya-qwen
+Environment=OLLAMA_URL=http://localhost:11434
+ExecStart=/home/peacekins/laya-qwen/.venv/bin/uvicorn laya_qwen.service:app --host 100.108.252.74 --port 8100
+# The tailnet address can appear a little after boot; keep retrying until it does.
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
