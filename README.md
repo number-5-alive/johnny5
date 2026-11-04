@@ -1,14 +1,40 @@
 # Johnny 5: Number 5 Alive
 
-A local-first AI harness for a personal computer. It runs a capable open
-model on hardware you own, checks its answers against a local library
-before it speaks, and labels everything it says: verified, or guess.
+Every AI you can talk to today is an oracle: one enormous model, in
+someone else's data center, pretending to be best at everything, lit
+up at full power whether you asked it about the universe or about a
+town ten miles away. It answers to the company that runs it. Its
+memory is not yours.
 
-Most AI systems optimize for fluency. This one optimizes for knowing
-when it does not know. Abstaining is a first-class outcome here, not a
-failure mode.
+Johnny 5 is a project to build the opposite shape. A personal system
+of composed minds: a local half that lives in your house and holds
+your own shelves of checked knowledge, your records, your rules; and
+an external half, a moderator with the best models in the world on
+call, convened per question and cast to their strengths. One input
+arrives and is decided by both halves together. Small questions die
+cheap, close to home. Big ones get a room, a record, and a dissent
+preserved. The human commissions the work, sets the caps, and can
+read every word of the ledger.
+
+Johnny himself is the local half, running today on a home server on
+the Mississippi Gulf Coast: he checks his shelves before he answers
+and labels how sure he is. Around him, the Robot Factory builds and
+S.A.I.N.T. (System for Aligned Intelligence and Negotiated Truth)
+deliberates, under a moderator who drafts nothing and votes on
+nothing. This repository is the whole thing, code and records
+together, published so the claims can be checked. What is built is
+labelled built. What is vision is labelled vision.
 
 Live project page: https://number5alive.com
+
+## Johnny: the local half
+
+Johnny runs a capable open model on hardware his owner holds,
+checks his answers against a local library before he speaks, and
+labels everything he says: verified, or guess. Most AI systems
+optimize for fluency. This one optimizes for knowing when it does
+not know. Abstaining is a first-class outcome here, not a failure
+mode.
 
 ## The modes
 
