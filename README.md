@@ -282,6 +282,20 @@ crossing; a service module that lets a lane file its own
 escalation when it abstains is staged behind a flag. The protocol
 and the code live in [`bridge/`](bridge/).
 
+## The seat of consciousness
+
+Above both halves sits the newest piece of the design: a small
+composite, a language model, a reasoning model, a probability
+instrument, and a retrieval discipline checking each other,
+whose only job is deciding what a prompt needs. Both
+interpreters read every prompt and bid for the work; a fast
+local model translates the bids into a dispatch command; Jev
+prices the division; and the work runs assembled per signal, a
+mind, a mode, a bundle of shelves, a bundle of context. It was
+designed and probed live on November 4, 2026, and the probe,
+failures included, is published in
+[`seat-of-consciousness/`](seat-of-consciousness/).
+
 ## The constitution: money, approvals, and tests
 
 The room runs on machinery whose whole job is to keep enthusiasm

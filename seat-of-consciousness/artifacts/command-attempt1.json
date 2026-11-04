@@ -1,0 +1,16 @@
+{
+  "allocations": [
+    {
+      "worker": "johnny",
+      "task": "BRING: ~11 miles to Pass Christian. Local Gulf Coast resilience data, community trust logs, and the company’s historical service records to anchor the BID.",
+      "mode": "hangglider",
+      "shelves": ["maps"]
+    },
+    {
+      "worker": "alex",
+      "task": "BRING: commissioner context (the client's company is the client's company; Pass Christian is his priority market; census anchors renegotiated 2026-11-04 so Pass Christian leads) and the drafting itself.",
+      "mode": "input",
+      "shelves": ["maps"]
+    }
+  ]
+}

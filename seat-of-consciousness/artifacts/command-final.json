@@ -1,0 +1,15 @@
+{
+  "allocations": [
+    {
+      "worker": "johnny",
+      "task": "LOOK UP: How far is Ocean Springs from Pass Christian?",
+      "mode": "grasshopper",
+      "shelves": ["maps"]
+    },
+    {
+      "worker": "alex",
+      "task": "DRAFT: A talking point for the client about the company serving Pass Christian, based on the distance information provided by Johnny.",
+      "context": ["commissioner context (the client's company is the client's company; Pass Christian is his priority market; census anchors renegotiated 2026-11-04 so Pass Christian leads)"]
+    }
+  ]
+}
