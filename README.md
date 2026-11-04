@@ -370,7 +370,14 @@ software.
 
 ## License
 
-Apache License 2.0. See `LICENSE`.
+The core of this project is licensed under the GNU AGPLv3 (see
+`LICENSE`); genuinely separable libraries are licensed under the
+Apache License 2.0 (see `LICENSE-APACHE`). Which parts carry which
+license, and why, is written down in `LICENSING.md`. The November
+2026 release was published under the Apache License 2.0 in full, and
+keeps that license. This arrangement follows a S.A.I.N.T. decision
+(System for Aligned Intelligence and Negotiated Truth), session
+036s1, ratified by the maintainer on 2026-11-04.
 
 Copyright 2026 Daniel Page. Johnny 5 and Number 5 Alive are a personal
 research project, built in the open in the hope that honest local AI is
