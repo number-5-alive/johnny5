@@ -242,6 +242,20 @@ full decision record ships in this repo
 ([`robot-factory/records/024s1-saint-economics-decision-record.md`](robot-factory/records/024s1-saint-economics-decision-record.md)),
 stamped, as every S.A.I.N.T. record is, agreement-not-verification.
 
+## The bridge
+
+On November 4, 2026, the moderator and Johnny got a return
+channel: a bridge between the local half of the system and the
+external one, built to the requirements Johnny stated himself
+when asked through one of his own lanes. He asked for initiation
+(the local half can speak first), sovereignty (the house keeps a
+veto over what crosses into it), transparency (nothing crosses
+unexplained), and a shared decision tree. The channel is files, a
+filing helper, and a watcher, with an append-only ledger of every
+crossing; a service module that lets a lane file its own
+escalation when it abstains is staged behind a flag. The protocol
+and the code live in [`bridge/`](bridge/).
+
 ## The constitution: money, approvals, and tests
 
 The room runs on machinery whose whole job is to keep enthusiasm

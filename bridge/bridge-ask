@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# bridge-ask: the filing helper for the Johnny <-> moderator bridge.
+# Spec: bridge-spec.md (2026-11-04). Home: ~/bridge on argo.
+set -euo pipefail
+BRIDGE="$HOME/bridge"
+LEDGER="$BRIDGE/ledger.jsonl"
+mkdir -p "$BRIDGE/outbox" "$BRIDGE/inbox" "$BRIDGE/handled"
+touch "$LEDGER"
+
+ledger() {
+  python3 - "$@" << 'PYEOF'
+import json, sys, datetime
+ev, frm, kind, fn, note = sys.argv[1:6]
+line = {"t": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "event": ev, "from": frm, "kind": kind, "file": fn, "note": note}
+with open(sys.argv[6], "a") as f:
+    f.write(json.dumps(line) + "\n")
+PYEOF
+}
+
+today_count() {
+  local today
+  today=$(date -u +%Y-%m-%d)
+  grep -c "\"event\": \"filed\".*\"t\": \"$today" "$LEDGER" || true
+}
+
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  count)
+    today_count ;;
+  file|push)
+    FROM="johnny"; DEST="outbox"
+    if [ "$cmd" = "push" ]; then FROM="alex"; DEST="inbox"; fi
+    KIND="note"; CARRIES=""; RE="-"; SLUG="msg"
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --from) FROM="$2"; shift 2 ;;
+        --kind) KIND="$2"; shift 2 ;;
+        --carries) CARRIES="$2"; shift 2 ;;
+        --re) RE="$2"; shift 2 ;;
+        --slug) SLUG="$2"; shift 2 ;;
+        *) echo "unknown arg: $1" >&2; exit 2 ;;
+      esac
+    done
+    if [ -e "$BRIDGE/STOP" ]; then
+      ledger "refused-stop" "$FROM" "$KIND" "-" "STOP file present" "$LEDGER"
+      echo "bridge is STOPPED" >&2; exit 3
+    fi
+    if [ "$DEST" = "outbox" ]; then
+      n=$(today_count)
+      if [ "$n" -ge 6 ]; then
+        ledger "refused-rate" "$FROM" "$KIND" "-" "daily filing limit" "$LEDGER"
+        echo "daily filing limit reached" >&2; exit 4
+      fi
+    fi
+    ts=$(date -u +%Y%m%dT%H%M%SZ)
+    fn="${ts}-${KIND}-${SLUG}.md"
+    body=$(cat)
+    {
+      echo "FROM: $FROM"
+      echo "KIND: $KIND"
+      echo "RE: $RE"
+      echo "CARRIES: $CARRIES"
+      echo ""
+      printf '%s\n' "$body"
+    } > "$BRIDGE/$DEST/$fn"
+    ledger "filed" "$FROM" "$KIND" "$fn" "$CARRIES" "$LEDGER"
+    echo "$fn" ;;
+  ack)
+    FN=""; 
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --file) FN="$2"; shift 2 ;;
+        *) echo "unknown arg: $1" >&2; exit 2 ;;
+      esac
+    done
+    if [ -f "$BRIDGE/outbox/$FN" ]; then
+      mv "$BRIDGE/outbox/$FN" "$BRIDGE/handled/$FN"
+      ledger "delivered" "alex" "-" "$FN" "moved to handled" "$LEDGER"
+      echo "acked $FN"
+    else
+      echo "not in outbox: $FN" >&2; exit 5
+    fi ;;
+  *)
+    echo "usage: bridge-ask file|push|ack|count" >&2; exit 2 ;;
+esac
