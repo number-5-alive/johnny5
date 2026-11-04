@@ -300,6 +300,23 @@ designed and probed live on November 4, 2026, and the probe,
 failures included, is published in
 [`seat-of-consciousness/`](seat-of-consciousness/).
 
+The full circuit, as a journey: a prompt touches both
+interpreters at once, the skin of the system, one agent facing
+the world with the web and the frontier models in reach, one
+facing the house with its shelves, records, and rules. Each
+files its data requirements as a bid. The seat's translator
+assembles the dispatch, Jev prices the division, and the work
+fans out to the specialized buckets: Wikipedia for checked
+knowledge, maps for the physical world, code for how things are
+built, or out to the room's specialists when a question earns
+the cost. What returns is evidence, and the halves' results
+recombine into one answer with its certainty labelled. Around
+the circuit sits the rest of the anatomy: the shelves are the
+brain's regions, the seat holds only their map, and the
+external components are the hands, tools today and robots
+eventually, working under receipts and vetoes like everything
+else here.
+
 ## The constitution: money, approvals, and tests
 
 The room runs on machinery whose whole job is to keep enthusiasm
