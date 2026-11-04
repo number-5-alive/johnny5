@@ -14,6 +14,35 @@ already configured: not a destination picked from a list, but a
 worker assembled per signal. A mind, a mode, a bundle of
 shelves, a bundle of context.
 
+## The full picture
+
+The architecture, as an anatomy:
+
+- **The skin.** The two interpreters are proper agents with
+  wide context about the user. One faces outward (the universal
+  interpreter: the world's models, the web, the wider context a
+  prompt arrives in), one faces inward (the home interpreter:
+  the shelves, the records, the rules, the person). A prompt
+  touches both at once, and each adds its data requirements.
+- **The seat.** The little coordinator in the bridge holds a
+  general knowledge of the systems, the registry of what
+  exists, and only enough of the contents to send a signal. It
+  assembles workers; it does not itself know.
+- **The shelves.** The brain's regions: specialized buckets of
+  checked material (Wikipedia, maps, code), each answering only
+  what it holds, each returning evidence rather than opinion.
+- **The hands.** The external components and the action shelf:
+  tools today, robots eventually, returning receipts and
+  observations, never certifying their own work.
+
+A prompt's journey, then: it reaches both interpreters; each
+files its data requirements as a bid; the seat's translator
+turns the prompt and the bids into a dispatch command; Jev
+prices the division; the specified buckets and seats do the
+work; and the results are recombined into one answer with its
+certainty labelled, the dispatch ledgered alongside the house's
+other crossings.
+
 ## The mechanism
 
 1. **Bids.** Both interpreters read the prompt and file an ask:

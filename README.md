@@ -288,10 +288,14 @@ Above both halves sits the newest piece of the design: a small
 composite, a language model, a reasoning model, a probability
 instrument, and a retrieval discipline checking each other,
 whose only job is deciding what a prompt needs. Both
-interpreters read every prompt and bid for the work; a fast
-local model translates the bids into a dispatch command; Jev
-prices the division; and the work runs assembled per signal, a
-mind, a mode, a bundle of shelves, a bundle of context. It was
+interpreters read every prompt and bid for the work: they are
+the system's skin, one facing the world and one facing the
+house, each holding wide context about its owner, while the
+seat holds only the map of what exists. A fast local model
+translates the bids into a dispatch command; Jev prices the
+division; and the work runs assembled per signal, a mind, a
+mode, a bundle of shelves, a bundle of context, then recombines
+into a single answer. It was
 designed and probed live on November 4, 2026, and the probe,
 failures included, is published in
 [`seat-of-consciousness/`](seat-of-consciousness/).
