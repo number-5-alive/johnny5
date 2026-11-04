@@ -1,0 +1,11 @@
+{
+  "seat": "claude-code",
+  "model": "claude-opus-5-5",
+  "started": "2026-10-31T11:34:34-05:00",
+  "finished": "2026-10-31T11:34:37-05:00",
+  "in_tokens": 2787,
+  "out_tokens": 9,
+  "cost_usd": 0.0174058,
+  "cost_source": "cli-reported",
+  "exit": "ok"
+}

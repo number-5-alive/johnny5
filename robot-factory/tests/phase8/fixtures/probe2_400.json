@@ -1,0 +1,10 @@
+{
+ "status": 400,
+ "body": {
+  "detail": {
+   "error_type": "api_usage_error",
+   "message": "Invalid request."
+  }
+ },
+ "source": "work/016-probe/probe2.record.json response.body_json, verbatim (REAL)"
+}

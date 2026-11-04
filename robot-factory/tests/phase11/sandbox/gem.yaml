@@ -1,0 +1,6 @@
+ruleset: saint
+rounds: 1
+seats:
+  - seat: gemini_cli
+    roles: [critic]
+    calls: 2

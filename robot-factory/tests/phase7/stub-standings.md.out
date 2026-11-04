@@ -1,0 +1,46 @@
+# Standings before round 2: 931-two
+
+*Standings: record, not opinion. Computed by the scribe from the session record before this round; it carries no vote.*
+
+Agenda: Should the room pilot a four-day week before any wage change?
+
+## Positions per seat
+
+### claude_code (proposer, chair)
+
+- As proposer: opened with `r0-proposer-v1.md`.
+
+```markdown
+Position: the room should pilot a four-day week before any wage change.
+```
+
+- As chair, round 1: accepted P1; rejected P2; restated as `r1-chair-v2.md`.
+
+### qwen_local (challenger; also scribe: Johnny (qwen_local), bin/scribe.py through seats/qwen_local.sh (local), no vote)
+
+- As challenger, round 1: raised P1, P2.
+  - P1: The pilot has no stated length.
+  - P2: Wage effects are ignored entirely.
+
+## Points answered vs open
+
+Raised 2; answered 2 (accepted 1, rejected 1); open 0.
+
+| Round | Point | Raised | Status | Chair's reason |
+|---|---|---|---|---|
+| 1 | P1 | The pilot has no stated length. | answered: accepted | the pilot needs a stated length; six months added. |
+| 1 | P2 | Wage effects are ignored entirely. | answered: rejected | wages are out of scope for the pilot question. |
+
+## Disagreements outstanding
+
+- Round 1 P2: Wage effects are ignored entirely.  
+  Chair rejected: wages are out of scope for the pilot question.
+
+## Scribe's reading (restates the tally; no vote)
+
+Two points were raised; one was accepted and one rejected; none is open.
+
+*Drafted by the local seat `qwen-local` (model `qwen3.6:27b`) through `seats/qwen_local.sh`; local-free, $0.0.*
+
+---
+A record, not an endorsement. The scribe holds no vote.

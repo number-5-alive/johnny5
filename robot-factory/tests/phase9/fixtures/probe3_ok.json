@@ -1,0 +1,72 @@
+{
+ "_source": "work/021-probe/probe3.record.json (live, 2026-11-01), body_json verbatim",
+ "status": 200,
+ "body": {
+  "background": false,
+  "completed_at": 1793563307,
+  "created_at": 1793563307,
+  "error": null,
+  "frequency_penalty": 0,
+  "id": "resp_b437a3cb-d8b4-46e4-9e4f-6ad28712d8d6",
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 40,
+  "max_tool_calls": null,
+  "metadata": {},
+  "model": "perplexity/sonar",
+  "object": "response",
+  "output": [
+   {
+    "content": [
+     {
+      "annotations": [],
+      "text": "Python 3.14.1 is the latest stable release, according to the [official Python downloads page](https://www.python.org/downloads/).",
+      "type": "output_text"
+     }
+    ],
+    "id": "msg_2acbfeaf-7323-488c-82cc-8e9327104348",
+    "role": "assistant",
+    "status": "completed",
+    "type": "message"
+   }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "reasoning": null,
+  "safety_identifier": null,
+  "service_tier": "default",
+  "status": "completed",
+  "store": true,
+  "temperature": 1,
+  "text": {
+   "format": {
+    "type": "text"
+   }
+  },
+  "tool_choice": "auto",
+  "tools": [],
+  "top_logprobs": 0,
+  "top_p": 1,
+  "truncation": "",
+  "usage": {
+   "cost": {
+    "currency": "USD",
+    "input_cost": 1e-05,
+    "output_cost": 9e-05,
+    "total_cost": 0.0001
+   },
+   "input_tokens": 42,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 35,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 77
+  },
+  "user": null
+ }
+}

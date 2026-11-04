@@ -1,0 +1,151 @@
+{
+ "_doc": "Robot Factory seat registry (Phase 5, task 012, 2026-11-01). Read by bin/budget.py (queue SEAT: routing, pre-flight, ledger) and bin/session.py (session briefs). Keys are the seat ids used in 'SEAT: <id>' lines and 'SEAT <role>: <id>' brief lines. billing: subscription (pacing tally) | api (real dollars) | local (free). meter: usd (the CLI states a dollar figure) | tokens (no dollar figure is reported; tallied in tokens only). model: null = the model is whatever the CLI reports; a string = the model the adapter requests. status: active | awaiting-login (routable; the adapter refuses cleanly until Dan logs in). Candidates are NOT seats: no adapter, never routable.",
+ "seats": {
+  "claude_code": {
+   "ledger_seat": "claude-code",
+   "adapter": "seats/claude_code.sh",
+   "model": null,
+   "billing": "subscription",
+   "meter": "usd",
+   "token_class": "frontier",
+   "status": "active",
+   "card": "seats/cards/claude_code.md"
+  },
+  "qwen_local": {
+   "ledger_seat": "qwen-local",
+   "adapter": "seats/qwen_local.sh",
+   "model": "qwen3.6:27b",
+   "billing": "local",
+   "meter": "usd",
+   "token_class": "local",
+   "status": "active",
+   "card": "seats/cards/qwen_local.md"
+  },
+  "codex": {
+   "ledger_seat": "codex",
+   "adapter": "seats/codex.sh",
+   "model": "gpt-6-luna",
+   "billing": "subscription",
+   "meter": "tokens",
+   "token_class": "codex",
+   "status": "active",
+   "card": "seats/cards/codex.md"
+  },
+  "gemini_cli": {
+   "ledger_seat": "gemini-cli",
+   "adapter": "seats/gemini_cli.sh",
+   "model": null,
+   "billing": "subscription",
+   "meter": "tokens",
+   "token_class": "gemini_cli",
+   "status": "awaiting-login",
+   "card": "seats/cards/gemini_cli.md"
+  },
+  "jev": {
+   "ledger_seat": "jev",
+   "adapter": "seats/jev.sh",
+   "model": "jev-latest",
+   "billing": "api",
+   "meter": "usd",
+   "token_class": "api",
+   "status": "active",
+   "card": "seats/cards/jev.md",
+   "api": {
+    "shape": "systemone",
+    "base_url": "https://api.typesafe.ai/v1/systemone",
+    "key_file": "secrets/jev.key",
+    "price_in_per_mtok_usd": 0.042,
+    "price_out_per_mtok_usd": 0.0,
+    "price_source": "TypeSafe docs via neuraltrust.ai + codecaf.com, 2026-11-01. Researched by Alex 2026-11-01 from vendor pricing docs (see ~/workspace/homelab/api-seats-desk-prep-2026-11-01.md). CANDIDATE until Dan ratifies. RATIFIED by Dan 2026-11-01 as part of the full task 016 commission (doctrine ratification). Probe 3 in task 016b confirmed the wire format live: HTTP 200, model jev-1.14.0, usage reported (284 in / 21 out on a one-sentence state; the server adds ~270 tokens per call).",
+    "price_status": "RATIFIED",
+    "facts_status": "Endpoint, shape and prices confirmed from TypeSafe documentation roundups 2026-11-01. NOT OpenAI-shaped: the api_seat.py core speaks openai-chat only, so this seat cannot run until task 016 builds the systemone shape. Open question for 016: whether the response reports token usage. KEY PROVISIONED by Dan 2026-11-01 (locked file verified: mode 600, owner peacekins, one line). Status set to awaiting-adapter: the key exists, but Jev speaks the systemone typed-question shape, not OpenAI chat, so the seat stays non-routable until task 016 builds its adapter + crossover template library; 016 flips it active. PROBED 2026-11-01 (task 016b, probe 3, HTTP 200, work/016-probe/probe3.record.json): POST to base_url exactly (no path appended), Authorization: Bearer; body {\"model\":\"jev-latest\",\"state\":str,\"questions\":{id:{\"type\":\"noul\",\"instructions\":str}}} -- questions is a MAP (a list gets 422 'Input should be a valid dictionary'), type is lowercase and the field is 'instructions' ({\"type\":\"Noul\",\"question\":...} gets 400 'Invalid request.'). Reply {\"model\":\"jev-1.14.0\",\"answers\":{\"q1\":{\"type\":\"noul\",\"noul\":0.92}},\"usage\":{\"input_tokens\":284,\"output_tokens\":21}}: jev-latest resolves to jev-1.14.0; usage IS reported; ~270 tokens of server-side overhead on a 1-question call; no request id in the body (header x-typesafe-request-id only). choice/score answer shapes are DOCUMENTED, not yet observed live. Input limit: the documentation roundups DISAGREE (64K vs ~32K tokens); the adapter guards state+questions at 30,000 estimated tokens. Status and prices left unchanged by 016b. FLIPPED ACTIVE by the moderator 2026-11-01 after the 016b review (phase8 93/0 independently re-run). First live smoke: task 019 (claim-support consult; also the first live Score answer). SMOKE 019 (2026-11-01): the call itself SUCCEEDED (usage reported, 463 in / 35 out, $0.00001945) but the adapter refused the reply at validation: q2 Score came back 3.95 \u2014 Score is a FRACTIONAL POSITION on the levels scale (0..n-1), not the integer level index the docs-based parser expected. Noul parsed fine. Status rolled back to awaiting-adapter per the 016b seat's own instruction; parser fix = task 016c. The raw 019 reply was not preserved (016c adds raw-reply preservation on unparsed exits). SCORE SEMANTICS (live-proven by 019, adopted by 016c 2026-11-01): a Score answer's \"score\" is a NUMBER on the continuous scale 0..n-1 over the n levels sent (lowest = 0); 019 returned 3.95 on a 5-level Score (3.95 of 4: between the 4th and 5th levels, near the top). The adapter now accepts int/float (not bool, finite) with 0 <= score <= n-1 and still refuses out-of-range, non-numeric (incl. numeric strings) or missing scores; it reports the nearest level (half rounds up) and the normalized position score/(n-1). 019 used 35 output tokens for Noul+Score vs 21 for probe 3's Noul alone, so the live Score answer was most likely bare ({\"type\":\"score\",\"score\":3.95}, no legend/probabilities/confidence) -- inferred, not observed; legend/probabilities stay optional and validated as before. Choice answers remain DOCUMENTED, not observed live. Unparsed replies are now kept at work/jev-raw/<meta stem>.reply.json (mode 600, path in meta raw_reply). Status and prices left unchanged by 016c. RE-FLIPPED ACTIVE by the moderator 2026-11-01 after the 016c review (fractional Score parsing + raw-reply preservation; phase8 109/109, moderator re-run). Verification smoke 019b carries all three kinds incl. the first live Choice. SMOKE 019b (2026-11-01, raw reply preserved): ALL THREE KINDS NOW SEEN LIVE. Noul {type, noul} = 0.98 on a known-true claim \u2014 matches docs. Choice {type, choice, confidence, probabilities keyed by option text} \u2014 matches docs; picked the correct option at confidence 1.0. Score: 3.94 with probabilities {3: 0.05, 4: 0.95} and confidence 0.96 \u2014 substantively right \u2014 BUT legend arrives as an OBJECT {\"0\": label, ...}, not the array the parser expects; that mismatch alone refused the run. Fix = task 016d (legend normalization). Jev is substantively live-ready; only this representation gap remains. LEGEND SHAPE (live-proven by 019b, adopted by 016d 2026-11-01): a Score answer's \"legend\" is an OBJECT mapping index strings to the level labels sent, {\"0\": lowest, ..., \"n-1\": highest} (019b: {\"0\":\"No confidence\",\"1\":\"Low\",\"2\":\"Moderate\",\"3\":\"High\",\"4\":\"Complete\"}), and its \"probabilities\" are keyed by the same index strings (019b: {\"0\":0.0,\"1\":0.0,\"2\":0.0,\"3\":0.05,\"4\":0.95}). The adapter now normalizes the legend: it accepts that object (keys exactly \"0\"..\"n-1\") or the documented array of labels, and refuses missing/extra/gapped/non-canonical indices, wrong label count, and wrong or non-string labels (exit 4 unparsed). The 019b reply now parses in full (fixture tests/phase8/fixtures/live019b_reply.json). Status and prices left unchanged by 016d. FLIPPED ACTIVE (final) by the moderator 2026-11-01 after the 016d review: legend normalization landed, the real 019b reply renders in full, phase8 123/0. Live verification = smoke 019c (same three-kind consult as 019b).",
+    "role": "certainty auditor (never grants the verified stamp)"
+   }
+  },
+  "deepseek": {
+   "ledger_seat": "deepseek",
+   "adapter": "seats/deepseek.sh",
+   "model": "deepseek-reasoner",
+   "billing": "api",
+   "meter": "usd",
+   "token_class": "api",
+   "status": "active",
+   "card": "seats/cards/deepseek.md",
+   "api": {
+    "shape": "openai-chat",
+    "base_url": "https://api.deepseek.com",
+    "key_file": "secrets/deepseek.key",
+    "price_in_per_mtok_usd": 0.28,
+    "price_out_per_mtok_usd": 0.42,
+    "price_source": "DeepSeek reasoner pricing $0.28 in / $0.42 out per MTok, single secondary source read 2026-11-01 (see api-seats-desk-prep-2026-11-01.md). RATIFIED by Dan 2026-11-01, who chose the reasoner over deepseek-flash ($0.30/$1.20 peak, two sources) for the reasoning strength on its role card. Single-source caveat stands until a DeepSeek invoice or pricing page confirms.",
+    "price_status": "RATIFIED",
+    "facts_status": "Endpoint confirmed 2026-11-01 (https://api.deepseek.com, OpenAI-chat shape). deepseek-chat is a retired alias (V3.2). Seat model set to deepseek-reasoner per Dan 2026-11-01. Key provisioned by Dan 2026-11-01. Smoke 018b PASSED 2026-11-01 (175 in / 222 out, $0.00014224 at reasoner rates). Observation: the vendor response self-reports model \"deepseek-flash\" although \"deepseek-reasoner\" was requested; billing follows the requested model, so reasoner-rate accounting stands; the adapter records the vendor-reported name in the ledger meta."
+   }
+  },
+  "perplexity": {
+   "ledger_seat": "perplexity",
+   "adapter": "seats/perplexity.sh",
+   "model": "perplexity/sonar",
+   "billing": "api",
+   "meter": "usd",
+   "token_class": "api",
+   "status": "active",
+   "card": "seats/cards/perplexity.md",
+   "api": {
+    "shape": "responses",
+    "base_url": "https://api.perplexity.ai",
+    "key_file": "secrets/perplexity.key",
+    "price_in_per_mtok_usd": 1.0,
+    "price_out_per_mtok_usd": 2.5,
+    "price_source": "Perplexity pricing docs via perkstack.co (checked 2026-10-17) + cabina.ai, 2026-11-01. Per-call fee is the $5/1000-requests rate at low search context (the default). Researched by Alex 2026-11-01 from vendor pricing docs (see ~/workspace/homelab/api-seats-desk-prep-2026-11-01.md). CANDIDATE until Dan ratifies. RATIFIED by Dan 2026-11-01 ($1.00/$1.00 + $0.005/call). Key provisioned by Dan 2026-11-01; API credit purchased by Dan. RE-RATIFIED by Dan 2026-11-01 after task 021 probe evidence: vendor-reported costs imply ~$0.25 in / ~$2.50 out and no per-call fee. Dan chose the cover-both set (in $1.00 = ratified figure, out $2.50 = vendor-implied figure, per-call $0.005 kept) so the ledger can only overstate Perplexity, never under. Model corrected to perplexity/sonar per the new endpoint (probe-proven).",
+    "price_status": "RATIFIED",
+    "facts_status": "Prices RATIFIED 2026-11-01; key + credit provisioned by Dan. Smoke 020 (2026-11-01) settled the endpoint question with the vendor's own words: HTTP 403 agent_api_migration_required \u2014 \"Sonar is now the Agent API. Use /v1/responses instead of /chat/completions.\" The classic chat path is retired; the seat needs a responses-shape adapter (task 021). Status awaiting-adapter until 021 lands; moderator flips after review. Task 021 probes (2026-11-01, work/021-probe/, 3 live calls): POST https://api.perplexity.ai/v1/responses, Bearer key; request fields used: model, input (string), max_output_tokens. Probe 1 with model \"sonar\" -> HTTP 400 'validation failed: model \"sonar\" is not supported'; probes 2-3 with model \"perplexity/sonar\" -> HTTP 200, object \"response\", status \"completed\", answer in output[].type \"message\" (role assistant) -> content[].type \"output_text\".text; usage.input_tokens / output_tokens / total_tokens plus usage.cost {input_cost, output_cost, total_cost, currency USD}. No structured citations seen: annotations [], tools [], no citations/search_results keys (probe 3 cited a source only as a link inside the model's own text). The registry model \"sonar\" is rejected on this endpoint; moderator decision needed before activation. FLIPPED ACTIVE by the moderator 2026-11-01 after Dan's price re-ratification; re-smoke 022 queued behind the 016b build.",
+    "price_per_call_usd": 0.005,
+    "role": "search specialist"
+   }
+  },
+  "gemini_api": {
+   "ledger_seat": "gemini-api",
+   "adapter": "seats/gemini_api.sh",
+   "model": "gemini-3.8-flash",
+   "billing": "api",
+   "meter": "usd",
+   "token_class": "api",
+   "status": "active",
+   "card": "seats/cards/gemini_api.md",
+   "api": {
+    "shape": "openai-chat",
+    "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "key_file": "secrets/gemini_api.key",
+    "price_in_per_mtok_usd": 0.75,
+    "price_out_per_mtok_usd": 3.75,
+    "price_source": "Gemini pricing via freellm.net model listing, 2026-11-01. Researched by Alex 2026-11-01 from vendor pricing docs (see ~/workspace/homelab/api-seats-desk-prep-2026-11-01.md). CANDIDATE until Dan ratifies. RATIFIED by Dan 2026-11-01: paid branch (his project is Tier 1, billing linked); dedicated Factory key provisioned by Dan 2026-11-01.",
+    "price_status": "RATIFIED",
+    "facts_status": "OpenAI-compatible endpoint confirmed 2026-11-01. Billing branch RESOLVED 2026-11-01: paid (Tier 1 project, billing linked). Free-tier branch not used. Upgrade option remains gemini-4-argon at $2.00/$10.00 intro pricing.",
+    "note": "AI Studio API-key route (OpenAI-compatible endpoint). Not the Gemini CLI OAuth seat (gemini_cli)."
+   }
+  },
+  "grok": {
+   "ledger_seat": "grok",
+   "adapter": "seats/grok.sh",
+   "model": "grok-4.7",
+   "billing": "api",
+   "meter": "usd",
+   "token_class": "api",
+   "status": "active",
+   "card": "seats/cards/grok.md",
+   "api": {
+    "shape": "openai-chat",
+    "base_url": "https://api.x.ai/v1",
+    "key_file": "secrets/grok.key",
+    "price_in_per_mtok_usd": 2.0,
+    "price_out_per_mtok_usd": 6.0,
+    "price_source": "xAI models page via roborhythms.com (checked 2026-10-23) + lmmarketcap.com (2026-11-01). Rates double at 200K+ prompts; the 60K input cap keeps calls under that line. Researched by Alex 2026-11-01 from vendor pricing docs (see ~/workspace/homelab/api-seats-desk-prep-2026-11-01.md). CANDIDATE until Dan ratifies. RATIFIED by Dan 2026-11-01 ($2.00/$6.00). Key + $5 Prototype credits provisioned by Dan 2026-11-01; auto top-up advised off (manual top-ups only).",
+    "price_status": "RATIFIED",
+    "facts_status": "Confirmed 2026-11-01. grok-4 was retired May 2026; grok-4.7 is the current flagship. Seat activated 2026-11-01 at Dan's direction."
+   }
+  }
+ },
+ "candidates": {},
+ "_doc_api": "Phase 6 (task 014, 2026-11-01): api seats. billing api, meter usd, token_class api (budget.yaml api:). status awaiting-key = NOT routable (a SEAT line naming it is refused) until Dan creates the key file and sets status active. api.key_file: relative to the factory base, must sit in secrets/, mode 600, read only by seats/api_seat.py. Prices are USD per million tokens; null = unpriced = refused (exit 4 unpriced-api / pre-flight refusal). price_per_call_usd: present and null = a per-request fee exists but is unpriced (refused); absent = no per-call fee. Every vendor fact here is UNVERIFIED (vendor docs could not be fetched in task 014); every price is null until Dan ratifies a figure."
+}

@@ -1,0 +1,6 @@
+ruleset: chaos
+rounds: 1
+seats:
+  - seat: codex
+    roles: [critic]
+    calls: 1

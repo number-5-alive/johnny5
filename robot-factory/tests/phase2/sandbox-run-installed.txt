@@ -1,0 +1,113 @@
+== T1 default task runs: planned + actual, caps wired ==
+done: 101-plain (exit 0) — log: logs/101-plain.log — ledger: appended (logs/101.meta.json, $0.25 cli-reported, worst case $10.00)
+  runner rc=0
+  PASS: one model call
+  PASS: CLI got --max-budget-usd 9.00 (cap 10 - reserve 1)
+  PASS: CLI got --autocompact 100000
+  PASS: CLAUDE_CODE_MAX_OUTPUT_TOKENS=8000
+  PASS: planned then actual, same call_id, actual <= worst
+{"t":"2026-10-31T11:36:23-05:00","round":"101-plain","seat":"claude-code","phase":"planned","worst_usd":10.0,"spent_before_usd":0.0,"call_id":"101-plain@2026-10-31T11:36:23-05:00","cap_usd":10.0,"cli_budget_usd":9.0,"reserve_usd":1.0,"ceiling_usd":50.0,"month":"2026-10","open_planned":0,"est_prompt_tokens":14,"max_out_tokens":8000,"approval":null}
+{"t":"2026-10-31T11:36:23-05:00","round":"101-plain","seat":"claude-code","phase":"actual","in_tokens":1105,"out_tokens":50,"cost_usd":0.25,"cost_source":"cli-reported","model":"claude-opus-5-5","exit":"ok","meta":"logs/101.meta.json","call_id":"101-plain@2026-10-31T11:36:23-05:00","worst_usd":10.0}
+== T2 (pass mark a) over-cap task refused before any model call ==
+refused: 102-overcap — REFUSED not approved: approval required but none found (approvals/102-overcap.jsonl) — task in held/, log: logs/102-overcap.log
+  runner rc=5
+  PASS: zero model calls
+  PASS: task moved to held/
+  PASS: no meta written
+  PASS: ledger: refused line, no planned line
+  PASS: no dangling planned line
+{"t":"2026-10-31T11:36:23-05:00","round":"102-overcap","seat":"claude-code","phase":"refused","reason":"not approved: approval required but none found (approvals/102-overcap.jsonl)","needs_approval_for":"cap override $25.00 > default $10.00","cap_usd":25.0}
+preflight: REFUSED not approved: approval required but none found (approvals/102-overcap.jsonl)
+no model call made; task moved to held/
+exit=refused 2026-10-31T11:36:23-05:00
+== T3 positive path: approved cap override runs (fixture approval, sandbox) ==
+done: 103-approved (exit 0) — log: logs/103-approved.log — ledger: appended (logs/103.meta.json, $0.25 cli-reported, worst case $25.00)
+  runner rc=0
+  PASS: ran
+  PASS: CLI got 24.00 (approved cap 25 - reserve 1)
+  PASS: planned line cites the approval
+{"t":"2026-10-31T11:36:23-05:00","round":"103-approved","seat":"claude-code","phase":"planned","worst_usd":25.0,"spent_before_usd":0.0,"call_id":"103-approved@2026-10-31T11:36:23-05:00","cap_usd":25.0,"cli_budget_usd":24.0,"reserve_usd":1.0,"ceiling_usd":50.0,"month":"2026-10","open_planned":0,"est_prompt_tokens":19,"max_out_tokens":8000,"approval":"approvals/103-approved.jsonl#1"}
+== T4 (pass mark b) approved, then file changed: hash check refuses ==
+refused: 104-changed — REFUSED not approved: hash mismatch: approved 63f942263e27, file now 43a17e0911fd (approvals/104-changed.jsonl#1) — task in held/, log: logs/104-changed.log
+  runner rc=5
+  PASS: zero model calls
+  PASS: refused: hash mismatch
+{"t":"2026-10-31T11:36:23-05:00","round":"104-changed","seat":"claude-code","phase":"refused","reason":"not approved: hash mismatch: approved 63f942263e27, file now 43a17e0911fd (approvals/104-changed.jsonl#1)","needs_approval_for":"cap override $25.00 > default $10.00","cap_usd":25.0}
+== T5 approval older than the file's last change (same content, re-saved) ==
+refused: 105-stale — REFUSED not approved: approval (2026-10-31T11:35:23-0500) not newer than the file's last change (2026-10-31T11:36:23-05:00) (approvals/105-stale.jsonl#1) — task in held/, log: logs/105-stale.log
+  runner rc=5
+  PASS: zero model calls
+  PASS: refused: approval not newer than file
+{"t":"2026-10-31T11:36:23-05:00","round":"105-stale","seat":"claude-code","phase":"refused","reason":"not approved: approval (2026-10-31T11:35:23-0500) not newer than the file's last change (2026-10-31T11:36:23-05:00) (approvals/105-stale.jsonl#1)","needs_approval_for":"cap override $25.00 > default $10.00","cap_usd":25.0}
+== T6 later approval for a different version wins (only the last record counts) ==
+refused: 106-two — REFUSED not approved: hash mismatch: approved 606f508a7c13, file now 9d81014a0077 (approvals/106-two.jsonl#2) — task in held/, log: logs/106-two.log
+  runner rc=5
+  PASS: reverted file refused against the latest approval
+== T7 (pass mark d) monthly ceiling blocks a task that would breach it (fixture ledger) ==
+refused: 107-ceiling — REFUSED monthly ceiling: month-to-date $41.50 + worst case $10.00 = $51.50 > ceiling $50.00 — task in held/, log: logs/107-ceiling.log
+  runner rc=5
+  PASS: zero model calls
+  PASS: refused: 38.50 actual + 3.00 open planned + 10.00 > 50 (old month ignored)
+{"t":"2026-10-31T11:36:24-05:00","round":"107-ceiling","seat":"claude-code","phase":"refused","reason":"monthly ceiling: month-to-date $41.50 + worst case $10.00 = $51.50 > ceiling $50.00","worst_usd":10.0,"spent_before_usd":41.5,"ceiling_usd":50.0,"month":"2026-10","cap_usd":10.0}
+-- same ledger, task lowers its own cap to $8 (allowed without approval): fits
+done: 108-lower (exit 0) — log: logs/108-lower.log — ledger: appended (logs/108.meta.json, $0.25 cli-reported, worst case $8.00)
+  runner rc=0
+  PASS: ran: 41.50 + 8.00 = 49.50 <= 50
+{"t":"2026-10-31T11:36:24-05:00","round":"108-lower","seat":"claude-code","phase":"planned","worst_usd":8.0,"spent_before_usd":41.5,"call_id":"108-lower@2026-10-31T11:36:24-05:00","cap_usd":8.0,"cli_budget_usd":7.0,"reserve_usd":1.0,"ceiling_usd":50.0,"month":"2026-10","open_planned":1,"est_prompt_tokens":18,"max_out_tokens":8000,"approval":null}
+{"t":"2026-10-31T11:36:24-05:00","round":"108-lower","seat":"claude-code","phase":"actual","in_tokens":1105,"out_tokens":50,"cost_usd":0.25,"cost_source":"cli-reported","model":"claude-opus-5-5","exit":"ok","meta":"logs/108.meta.json","call_id":"108-lower@2026-10-31T11:36:24-05:00","worst_usd":8.0}
+== T8 capped run: exit 2, meta exit capped, tokens from modelUsage, lines reconcile ==
+done: 109-capped (exit 2) — log: logs/109-capped.log — ledger: appended (logs/109.meta.json, $0.11 cli-reported, worst case $1.10)
+  runner rc=0
+{
+  "seat": "claude-code",
+  "model": "claude-opus-5-5",
+  "started": "2026-10-31T11:36:24-05:00",
+  "finished": "2026-10-31T11:36:24-05:00",
+  "in_tokens": 12603,
+  "out_tokens": 463,
+  "cost_usd": 0.11,
+  "cost_source": "cli-reported",
+  "exit": "capped"
+}
+  PASS: meta capped, tokens 12603/463 (usage block was zeroed), planned 1.10 >= actual 0.11
+  PASS: log says capped
+== T9 fail-closed edges ==
+refused: 110-badcap — REFUSED task file not acceptable: CAP_USD line malformed: 'CAP_USD: lots' — task in held/, log: logs/110-badcap.log
+  runner rc=5
+  PASS: malformed CAP_USD refused
+refused: 111-tiny — REFUSED cap $0.50 does not exceed overshoot reserve $1.00; worst case cannot be held to the cap — task in held/, log: logs/111-tiny.log
+  runner rc=5
+  PASS: cap <= reserve refused
+refused: 112-flag — REFUSED not approved: approval required but none found (approvals/112-flag.jsonl) — task in held/, log: logs/112-flag.log
+  runner rc=5
+  PASS: APPROVAL: required without approval refused
+refused: 113-big — REFUSED prompt estimate 66680 tokens > max_in_tokens 60000 — task in held/, log: logs/113-big.log
+  runner rc=5
+  PASS: prompt over 60k-token estimate refused
+refused: 114-yaml — REFUSED budget.yaml unusable: budget.yaml monthly_ceiling_usd is not a non-negative number — task in held/, log: logs/114-yaml.log
+  runner rc=5
+  PASS: broken budget.yaml refuses (fail closed)
+refused: 115-ledger — REFUSED ledger unreadable for the ceiling check: Expecting value: line 1 column 1 (char 0) — task in held/, log: logs/115-ledger.log
+  runner rc=5
+  PASS: corrupt ledger refuses (fail closed)
+== T10 scope gate and v0 flow intact ==
+done: 116-build (exit 0) — log: logs/116-build.log — ledger: appended (logs/116.meta.json, $0.25 cli-reported, worst case $10.00)
+  runner rc=0
+  PASS: SCOPE: build args passed
+  PASS: task in done/, reply in log, exit= last line
+done: 117-plain (exit 0) — log: logs/117-plain.log — ledger: appended (logs/117.meta.json, $0.25 cli-reported, worst case $10.00)
+  runner rc=0
+  PASS: plain task: no scope args
+== T11 approve.sh refuses without a TTY (sandbox copy) ==
+approve.sh: refused: stdin and stdout must both be a terminal (interactive-only, Q1). Nothing written.
+  PASS: refused, rc=1, approvals/ empty
+== T12 Dan's re-queue path: refused -> approved in held/ -> mv to queue/ -> runs ==
+refused: 119-requeue — REFUSED not approved: approval required but none found (approvals/119-requeue.jsonl) — task in held/, log: logs/119-requeue.log
+  runner rc=5
+  PASS: first run refused into held/
+done: 119-requeue (exit 0) — log: logs/119-requeue.log — ledger: appended (logs/119.meta.json, $0.25 cli-reported, worst case $25.00)
+  runner rc=0
+  PASS: after approval + mv back, it ran (mv keeps mtime)
+"phase":"refused" "phase":"planned" "phase":"actual" 
+
+TOTAL: 35 pass, 0 fail

@@ -1,0 +1,11 @@
+{
+ "_source": "work/021-probe/probe1.record.json (live, 2026-11-01), body_json verbatim",
+ "status": 400,
+ "body": {
+  "error": {
+   "message": "validation failed: model \"sonar\" is not supported",
+   "type": "invalid_request",
+   "code": 400
+  }
+ }
+}

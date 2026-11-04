@@ -1,0 +1,18 @@
+ruleset: factory
+rounds: 2
+seats:
+  - seat: claude_code
+    roles: [drafter]
+    calls: 3
+  - seat: codex
+    roles: [critic]
+    calls: 2
+  - seat: deepseek
+    roles: [critic]
+    calls: 2
+  - seat: grok
+    roles: [critic]
+    calls: 1
+  - seat: qwen_local
+    roles: [scribe]
+    calls: 2

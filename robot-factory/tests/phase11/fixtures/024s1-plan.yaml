@@ -1,0 +1,15 @@
+# 024s1-saint-economics reconstructed from records/024s1-saint-economics-record.md:
+# ruleset saint, 3 rounds; claude_code = proposer (1 compose) + chair (3 merges) = 4 calls;
+# codex = challenger (3 critiques) = 3 calls. Frontier calls total 7.
+# The scribe (johnny) drafted standings with no model call and no ledger line,
+# so no local seat is planned.
+ruleset: saint
+rounds: 3
+seats:
+  - seat: claude_code
+    roles: [proposer, chair]
+    calls: 4
+  - seat: codex
+    roles:
+      - challenger
+    calls: 3

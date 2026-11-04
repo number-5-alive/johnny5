@@ -1,0 +1,7 @@
+ruleset: saint
+rounds: 1
+total: 5
+seats:
+  - seat: codex
+    roles: [critic]
+    calls: 1

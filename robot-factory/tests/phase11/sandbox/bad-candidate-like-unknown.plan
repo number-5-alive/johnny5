@@ -1,0 +1,6 @@
+ruleset: saint
+rounds: 1
+seats:
+  - seat: claude-code
+    roles: [chair]
+    calls: 1

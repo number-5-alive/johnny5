@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "claude must not be called" >&2; exit 99

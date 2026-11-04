@@ -1,4 +1,4 @@
-# laya-qwen — design
+# laya-qwen: design
 
 Goal: fewer factual errors on general-knowledge questions, fully local. Single user via Open WebUI; multi-minute answers are acceptable.
 
@@ -206,7 +206,7 @@ The shipping system after stage 4: stage 2.1 retrieval (title match + normalizat
 
 - **Q1, frozen corpus untouched:** the new corpus is built in its own database (`~/laya-data/wiki-<date>.db`) with its own source tag (`wikipedia-<date>-html`). The live service and all benchmarks keep `wikipedia-20231101` until the gated swap decision; nothing on the branch changes `main`'s defaults.
 - **Q2, tables:** one passage per group of rows, each repeating the table caption, section heading and column headers, rows as "Header: value; …", packed to ~250 words.
-- **Q3, infoboxes:** each infobox becomes its own passage ("Infobox: <title> — Field: value; …"), tagged as an infobox.
+- **Q3, infoboxes:** each infobox becomes its own passage ("Infobox: <title>, Field: value; …"), tagged as an infobox.
 - **Q4, prose chunking:** unchanged (~250 words), so the Oct 30 comparison isolates the corpus.
 - **Q5, update fields:** `articles` gains revision ID, real revision timestamp and passage count; new `corpus_meta` (snapshot date, source format, last update applied) and `update_log` (per-run checkpoints for resume).
 - **Q6, live web retrieval:** out of scope for this round; waits for the Oct 30 review with the evaluation method.
@@ -366,3 +366,117 @@ Readiness is plumbing: nothing here changes the live answering service, the live
 - `rev_date` in `articles` is a placeholder (the snapshot date, a floor) until stage 7 loads per-article dates from `stub-meta-current`.
 - `~/laya-data/wiki.db.pre-articles` (38 GB) is the index backup taken before the side tables were added; delete it once no longer wanted.
 - NVMe space (2026-10-19): the planet tile build was relaunched by another session at 11:23 CDT with its temporaries on NVMe (`~/planet-tmp`). Each nightly staging update needs ~105 GB free for its copy and fails safely (`error`, no swap, resume point kept) if the space is not there. **Resolved from the planet side (Alex, 2026-10-19):** the planet watchdog stops the planet build if NVMe free space is under 130 GB between 02:25 and 02:58, so the 03:00 update gets its space. No updater change.
+
+## The room: one room, two rulesets (added 2026-11-01)
+
+Beside the answering service sits a second body: a room where hosted frontier models do supervised work. It is one room with two rulesets, not two programs. The benches, the seat contract, the task queue, the ledger, the caps, the moderator, and the scribe are shared. The ruleset is data: a ruleset declaration states what circulates, what capability envelope each seat works under, how many rounds may run, and what comes out.
+
+Shared machinery:
+
+- **Queue:** work arrives as self-contained Markdown task files in `queue/`. Each file carries its own brief, its scope header, and its pass marks. The runner (`run-next.sh`) processes one task per invocation; nothing runs in parallel and nothing runs twice.
+- **Seat contract:** a seat is invoked through its adapter with a brief, a capability envelope, and a budget. It returns work product and a meter reading. It cannot approve its own reach, and it cannot see the approval records (see Approvals).
+- **Ledger:** append-only. Every run writes a planned line before it starts (estimate, caps, scope, approver) and an actual line when it finishes (tokens, cost, exit). Lines are never edited or deleted; corrections are new lines.
+- **Budget preflight:** before any run, the machinery checks the task's caps against the session cap, the per-call caps, the reserve, and the monthly ceilings, and refuses the run if the arithmetic fails. Refusal is a normal outcome, not an error.
+- **Scribe:** every session is minuted by the scribe function, which files the record (rounds, drafts or positions, standings, outcome) on the local shelves. A record is a record, not an endorsement.
+
+The two rulesets:
+
+- **Factory** (builds): what circulates is an artifact (a website, a harness, a document). Rounds are solo drafting, cross-critique, and merge; recursion happens at the artifact level only, never at the level of model weights. Seats work under the capability envelope the commission names, which may include tools. What comes out is a labelled draft revision with a change record. The Factory never answers questions and never makes standalone decisions.
+- **SAINT** (System for Aligned Intelligence and Negotiated Truth; deliberates): what circulates is a question. Seats are tool-stripped: word-only, no shell, no files beyond the brief. What comes out is a decision record: the surviving position, the dissent preserved in the record, and the standings.
+
+Invariants:
+
+- SAINT consensus is agreement, not verification. It never carries Grasshopper's verified stamp, and no mechanism anywhere in the room upgrades agreement into evidence.
+- Author and critic default to different benches. A seat never critiques its own draft by default; exceptions must be named in the commission.
+- The scribe function never votes. Taking the minutes confers no say in the outcome.
+- Johnny may sit in the room in whatever capacities a commission names: seat, scribe, or both at once. Each capacity is labelled in the record, and the scribe function alone never votes even when the same system also sits as a seat.
+- The moderator frames the task, distributes the work, tallies, enforces the caps and gates, and reviews the output against pass marks written before the work started. The moderator drafts nothing and votes on nothing.
+- Round 0 divergence (a brainstorm round before round 1, in both rulesets) was approved as a structural addition on 2026-11-02. It is not yet built. The current runner has no Round 0 stage; sessions open with the first drafting or proposing round, and any divergence today happens inside that round's briefs.
+
+First worked example: SAINT session 024s1 (2026-11-01), agenda "the next economic system in the world of automation". Claude proposed, Codex challenged, Claude chaired, Johnny scribed and filed the standings. Three rounds, seven frontier calls, $0.3787 against the session cap. The decision record is in `robot-factory/records/`.
+
+## Seats and billing classes
+
+A seat is a mind with a contract. In code it is two things:
+
+- **A registry entry** (`seats/registry.json`): the seat's name, its adapter, its model, its prices (input and output per million tokens, plus any per-call fee), its billing class, its status, and a pointer to its role card.
+- **A role card:** what the seat is cast for. The card has two columns of strengths: declared (vendor reputation and the rationale at casting time) and proven (what the seat has actually done well in this room, from the session records). Over time the proven column takes over; casting follows the proven column when the two disagree.
+
+Three adapter shapes cover every current seat:
+
+- **Chat:** ordinary chat completions. The generic core (`seats/api_seat.py`) takes the registry entry and a brief and returns text plus token counts; most API seats are thin wrappers on it.
+- **Responses:** the responses shape, built when one vendor retired its chat path mid-setup (task 021). Citations from that seat arrive inline in the answer text.
+- **Typed questions:** one seat (Jev) does not chat at all. It answers typed questions (noul, choice, score) with numbers: a probability, a pick, or a fractional position on an ordered scale. Its adapter translates the room's questions into that shape and its answers back into data other seats may cite. It never drafts and never certifies.
+
+Two adapter consequences worth recording. Bare API seats have no clock, so every brief sent to one carries the current date in its text. Subscription seats (the owner's own Claude and ChatGPT plans, driven through their CLIs) are metered in tokens and converted at list prices purely as a quota proxy; the cash cost is zero and the ledger says so by class.
+
+Billing classes:
+
+- **subscription:** usage paced against the plan's allowance, recorded in meter dollars for comparability inside the class only.
+- **api:** real dollars, counted against the API ceiling.
+- **local:** the on-premises model; free, recorded in tokens, no ceiling but the hardware.
+
+Tallies are kept per class and never summed. A report that added subscription meter dollars to API dollars would be adding a quota proxy to money, so the budget summary prints the classes side by side and stops there. Over the classes sit two ceilings in `budget.yaml`, read at run time: $75 per month across all bodies, and $25 per month for API spending.
+
+Caps: a Factory session reports against $10, a SAINT session against $6.50 (see the worked example below), no session runs more than 3 rounds, and an artifact pauses for review at 20,000 tokens. Per-call caps: frontier seats 60,000 tokens in and 32,000 out; API seats 60,000 in and 8,000 out; the local seat 24,000 in and 4,000 out.
+
+### The overshoot reserve, and why per-call splits matter
+
+The CLI budget flag (`--max-budget-usd`) is not a hard cap: a request already in flight when the cap trips still completes and still bills. The mitigation is mechanical. The seat is handed the session cap minus a reserve, and the reserve is sized to bound one worst-case in-flight request. The reserve was $1.00 while the frontier output cap was 8,000 tokens. When the output cap rose to 32,000 (2026-10-31), the worst case for a single request rose to roughly $1.44 to $1.64 at fitted prices, and on 2026-11-01 the reserve was raised to $2.00 to cover it.
+
+Worked example (task 027, 2026-11-02): the suite re-baseline found every standard SAINT room being refused at preflight. Session planning splits the session cap across the room's frontier calls; at the then SAINT cap of $5.00 over three calls, the per-call cap is $1.66, and preflight refuses any call whose cap does not exceed the reserve. $1.66 does not exceed $2.00, so the room could not start, even though each call itself fit (worst case about $1.64). The reserve raise, correct for single-task Factory runs, had silently interacted with the per-call split in session rooms. The ruling (Dan, 2026-11-02): raise the SAINT session cap to $6.50, which puts the three-call split at $2.16, clear of the reserve, and leaves the reserve discipline unchanged. Lesson recorded with the fix: cap arithmetic must be checked at the smallest split a session can produce, not only at the session level.
+
+## Approvals (tiered, ratified 2026-11-01, built in task 026b)
+
+A task that reads and writes only inside its own work folder is confined and needs no approval. Reach beyond the folder is declared in the task's header (`SCOPE: build-read`, `SCOPE: build-write`, or the legacy `SCOPE: build`) and must be approved before the runner will execute it. An approval is bound to the exact text of the task: the record carries the file's sha256, and the approval's epoch must be newer than the file's modification time. Any edit to the task voids the approval, by hash mismatch or by age, and preflight refuses the run.
+
+Two tiers, split by the kind of reach:
+
+- **build-read:** the seat may read beyond its work folder (other trees on the machine) but writes stay inside the work folder. The moderator may approve this tier. The approval tool (`bin/moderator_approve.py`) appends a record to `approvals-moderator/<task>.jsonl` carrying the hash, the epoch, the approver (`moderator`), and the commission: the owner's instruction the task serves, named in words. Every moderator approval is listed in the budget summary, so the owner can spot-check the whole list at any time.
+- **build-write:** any write reach beyond the work folder. This stays with the human, approved interactively at his own terminal through `approve.sh`, which refuses to run without a real terminal, shows the file and its hash, and records the approval the same way. This tier is not delegable. The legacy bare `SCOPE: build` counts as build-write.
+
+Two guards keep the moderator's tier from becoming a hole. First, enforcement during a run: a build-read seat's permission grant enumerates its read paths one by one and excludes `approvals/`, `approvals-moderator/`, and `secrets/` from both reading and writing; edit access exists only inside the work folder; the approval tool itself refuses to run inside a seat run (the runner exports a marker it checks), and preflight reads only the real approvals directory, refusing symlinks and any record lacking the approver and commission fields. Second, the exceptions stay human even on a build-read task: a task carrying a cap override, or marked `APPROVAL: required`, still needs the owner's approval, and the moderator's tool says so when it approves.
+
+Mis-scoping rule (process, not code): if a task approved as build-read turns out to have needed write reach, the tier is presumed suspended pending the owner's review, and every moderator approval is re-listed for spot-checking. There is no suspension switch in the machinery; the rule is recorded here as a standing moderator duty, deliberately, so a future reader does not assume code enforces it.
+
+Note on the first uses: the task that built this tier (026b) could not itself be moderator-approved, since it writes machinery; it ran under the owner's interactive approval, as every machinery change does. The moderator tier was first exercised on 2026-11-02, on a diagnostics task (028) and the code shelf gate task (030).
+
+## Hang glider (fourth mode)
+
+The answering modes converge; hang glider exists to diverge. It is a mode for novel approaches, not for true ones, and its design follows from that single difference. The quirk is a requirement, not a side effect: an architecture built entirely of convergers has no sanctioned way to be strange, so this lane is the licensed eccentric, a little loopy and a little brilliant on purpose. The diversity baseline exists to protect exactly that: a future change that quietly tames the spread is a regression, and it should show as one.
+
+Mechanism:
+
+- **Panel:** five drafts from the bare local model, generated sequentially, not in parallel. Each later draft is briefed with a taken list, the directions the earlier drafts already used, and must go somewhere else. Sequential drafting with a taken list is the anti-repetition mechanism; temperature alone was measured not to be one (in the calibration probes, one prompt produced the same idea five times on heat alone, and nine times across the whole run).
+- **Spread:** a wide temperature ladder (0.2, 0.6, 1.0, 1.5, 1.9) combined with angle briefs drawn from a bank (the drafts are written as, for example, a behavioral economist, a game designer, a biologist, a curious twelve-year-old). Heat is the fine knob; the brief is the large knob. A calibration sweep, built behind a flag, pushes the top of the ladder from 2.0 toward 3.0 to find where coherence actually breaks; it has not yet been run against the model, so the cliff is unmeasured and no calibration figures are claimed.
+- **Reassessment:** a separate low-temperature pass reads the spread. It names the attractor, the direction the panel converged on, and sets it aside. For each remaining direction it states the mechanism in one line and what the direction ignores. It then applies the selection criterion below and develops the result into the final draft.
+- **Selection criterion:** the presented answer is the most new or novel combination of the spread. The reassessor first tries recombination: elements (mechanisms, angles, constraints) from different drafts that no single draft combined, assembled into the most novel combination that still passes a workability check. A combination is presented only if it beats the best single direction on novelty; otherwise the most-different single direction is presented. Parentage is recorded either way: which drafts contributed which elements, so a recombination is never passed off as a raw draft.
+- **Output, the five-fold card:** (1) the final draft; (2) a representative conservative pass, (3) a representative middle pass, (4) a representative liberal pass, each representative chosen as nearest its band's center rather than best, and each in a collapsed section under the final draft; (5) the reader's decision. The reader is the fifth element by design: the count of five is preserved with the judge inside it. The full spread and the reassessment reasoning are kept in the run record, one layer down.
+
+Invariants:
+
+- Hang glider carries no stamp of any kind. No label it emits claims verification, convergence, or correctness.
+- Selection is permitted here, and only here, because no truth claim is made. Everywhere else in this system, choosing a best answer was rejected as a mechanism: a judge picking a winner manufactures certainty. Triage for novelty, labelled as triage, with the human as the deciding fifth element, does not.
+- There is no accuracy gate. In its place: a contract suite checking what can be checked mechanically (the card's shape, exactly three collapsed band sections, the record's completeness, the attractor named, the taken list growing, and the absence of any stamp string in the mode's output path), and a diversity baseline, planned as a frozen battery of prompts whose output spread is kept as the reference, measured by distinct mechanisms per prompt and attractor strength, so a future change that quietly narrows the spread will show against it. The battery has not yet been run.
+
+## Code shelf wiring (second retrieval source)
+
+The code shelf (workstream C above) was built and serving on the packet API (`GET /code/search` on port 8210) from 2026-10-21, but the answering service did not consult it. Wiring it in followed the same discipline as the Wikipedia corpus swap: an audition to choose the mechanism, then a gate with marks written before the run.
+
+- **Scope:** Grasshopper only. The code shelf is a second retrieval source beside Wikipedia in the verified lane. Butterfly and Input are unchanged; Input is bare by definition and never gains shelves.
+- **Audition (mechanism choice):** a fixed question set, half API-fact and half debugging, each with a gold passage identified from the shelf and frozen before any run. Two arms on the same questions: plain shelf search, and a librarian arm in which the local model re-ranks the plain arm's candidates. The metric is gold-in-top-3, reported per arm and per question kind. The winning arm becomes the routing mechanism; the audition decides empirically what the router does, rather than the choice being asserted in advance.
+- **Gate (run 2026-11-02, task 030b):** the wired lane, simulated before any live change, had to beat the bare model on a held-out code question set by the written margin (+10), clear the written agreed-accuracy floor (80%), and keep a Wikipedia control subset within +/-3 of the Oct 30 gate aggregates. Results: the margin mark FAILED on a saturated set (wired 100.0%, bare 100.0%); the agreed-accuracy mark PASSED (100.0%, 39 agreed); the control mark FAILED (table 80.0%, delta -3.8; prose 100.0%, delta +22.0). Verdict: DO NOT WIRE, recorded unedited in records/030b-code-shelf-gate-record.md. The audition's retrieval stage, scored separately, went the other way: the librarian re-rank won gold-in-top-3 at 62.5% against plain search's 30.0% (n=40), which is the measured basis for the precedence rule below.
+- **Override wiring (task 031b, 2026-11-03):** the commissioner wired the shelf anyway, by recorded override, on the ground that the gate showed no evidence of harm, only an absence of certification. The wiring as built: the librarian re-rank of the shelf's top 15 down to 3, behind the environment flag LAYA_CODE_SHELF, read at request time and defaulting off in the source; a 10-second shelf timeout, with any shelf error, timeout, or empty result falling back to the unwired behaviour for that request and the fallback logged; service logs marking shelf-informed runs code_shelf="unverified"; agreement mechanics and the stamp unchanged, since the shelf informs drafts and never votes. Deployment of the staged build to the live service is a separate approval. Certification remains available only through a harder gate.
+- **Provenance:** every answer drawn from the code shelf carries its provenance on its face: the source site, the community score, the accepted mark where one exists, and the vintage (April 2024 for the question-and-answer dump; the source name and date for documentation). Community experience is labelled as community experience; it is not dressed as an edited reference.
+- **Precedence:** documentation ranks first for API-fact questions, question-and-answer material first for debugging questions, subject to what the audition's per-kind numbers support.
+
+## Interface: the status board and the projection meter
+
+
+Two interface additions, both read-only by construction.
+
+**The /status endpoint.** The service exposes a status feed whose handler may observe lane state at dispatch time and record it, and may never branch on it: no answering behavior may depend on the feed, so a broken board can never bend an answer. The payload reports which answering lane is executing (or idle), which room session is active if any (read from the Factory's own ledger and session records, tolerating their absence), and the most recent mode and session events with timestamps.
+
+**The board and its lights.** A single self-contained page polls the feed every five seconds and renders six indicator lights: the 5 (the Input lane), the hang glider, the grasshopper, the butterfly, a factory robot (a Factory session is active), and a winged robot (a SAINT session is active). A session lights exactly one robot, chosen by its ruleset. When the feed is unreachable the board degrades to all lights dim with a "no signal" note; it shows stale state as no state, never as current state.
+
+**The projection meter.** Before a session runs, `budget.py project` takes a session plan (ruleset, seats with their roles and call counts, rounds) and prints the run's expected shape. Per seat: an expected figure, taken from the ledger's history as the seat's average actual per comparable call where history exists, and otherwise the per-call cap, labelled cap-bound so the reader knows which kind of number it is; and a worst case, the per-call caps multiplied by the planned calls. Each figure is printed in its billing class's own units: tokens for subscription seats, dollars for API seats, the word "free" for the local seat. Text and JSON output alike keep the classes separate and never produce a summed total. The JSON form carries the plan's ruleset, rounds, and session cap, a per-seat array (seat, roles, calls, billing class, unit, expected, worst case), and the ceilings in force. The board renders the JSON form as per-seat meters (expected against worst case). The meter's own acceptance check is containment: projecting the plan of a recorded session must produce a band that contains that session's recorded actual. Its first containment run (task 033, 2026-11-02) passed and was honestly wide: the recorded SAINT session's plan projected to $0.31-$6.48 against an actual of $0.38. The band is expected to sharpen as the ledger grows; the meter is read-only and writes nothing, ever.

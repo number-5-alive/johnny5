@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factory status board</title>
+<style>
+  :root { --bg:#14161a; --panel:#1d2026; --dim:#3a3f48; --ink:#d8dde4; --muted:#8a93a0;
+          --lane:#ffc23d; --robot:#47d18c; --bad:#ff5d5d; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px; background:var(--bg); color:var(--ink);
+         font:15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  h1 { font-size:18px; font-weight:600; margin:0; }
+  #badge { display:none; padding:2px 10px; border-radius:10px; background:var(--bad); color:#fff;
+           font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+  body.nosignal #badge { display:inline-block; }
+  #updated { margin-left:auto; color:var(--muted); font-size:13px; }
+  .lights { display:flex; flex-wrap:wrap; gap:14px; }
+  .group { background:var(--panel); border-radius:12px; padding:14px; display:flex; gap:14px; }
+  .light { width:88px; height:88px; border-radius:50%; display:grid; place-items:center;
+           background:#0f1114; border:2px solid #262a31; color:var(--dim); transition:all .25s; }
+  .light svg { width:56px; height:56px; fill:none; stroke:currentColor; stroke-width:2.2;
+               stroke-linecap:round; stroke-linejoin:round; }
+  .light svg .f { fill:currentColor; stroke:none; }
+  .light.on.lane  { color:var(--lane);  border-color:var(--lane);  box-shadow:0 0 18px 2px rgba(255,194,61,.45); }
+  .light.on.robot { color:var(--robot); border-color:var(--robot); box-shadow:0 0 18px 2px rgba(71,209,140,.45); }
+  body.nosignal .light { color:var(--dim) !important; border-color:#262a31 !important; box-shadow:none !important; }
+  .caption { color:var(--muted); font-size:13px; margin:8px 2px 0; min-height:1.4em; }
+  section { margin-top:20px; background:var(--panel); border-radius:12px; padding:14px 16px; }
+  h2 { font-size:14px; font-weight:600; margin:0 0 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  #meter-panel { color:var(--muted); }
+  #events { list-style:none; margin:0; padding:0; }
+  #events li { display:flex; gap:12px; padding:4px 0; border-top:1px solid #262a31; font-size:14px; }
+  #events li:first-child { border-top:0; }
+  #events time { color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  #events .k { color:var(--muted); width:58px; flex:none; }
+</style>
+</head>
+<body class="nosignal">
+<header>
+  <h1>Factory status board</h1>
+  <span id="badge" role="status">no signal</span>
+  <span id="updated"></span>
+</header>
+
+<div class="lights">
+  <div class="group" aria-label="laya-qwen lanes">
+    <!-- the 5 (input lane) -->
+    <div class="light lane" id="light-input" title="input lane">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M44 12H24l-3 20c3-2 7-3 10-3 8 0 14 5 14 13s-6 13-14 13c-6 0-10-2-13-6" stroke-width="6"/>
+      </svg>
+    </div>
+    <!-- hang glider -->
+    <div class="light lane" id="light-hangglider" title="hangglider lane">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path class="f" d="M4 28 32 14 60 28 32 22Z"/>
+        <path d="M32 22v14M24 36h16M32 36l-4 8M32 36l4 8"/>
+        <circle class="f" cx="32" cy="46" r="3"/>
+        <path d="M32 49v6M28 52h8"/>
+      </svg>
+    </div>
+    <!-- grasshopper -->
+    <div class="light lane" id="light-grasshopper" title="grasshopper lane">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path class="f" d="M12 38c4-6 16-9 30-8 6 0 10 3 10 6s-4 5-10 5c-12 1-24 0-30-3Z"/>
+        <circle class="f" cx="54" cy="35" r="5"/>
+        <path d="M56 31c2-8 0-14-6-18M54 31c-2-7-7-12-14-14"/>
+        <path d="M30 32 42 16 48 44" stroke-width="3"/>
+        <path d="M24 41l-4 10M36 41l2 10M46 40l4 10"/>
+      </svg>
+    </div>
+    <!-- butterfly -->
+    <div class="light lane" id="light-butterfly" title="butterfly lane">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path class="f" d="M31 30C24 14 10 8 6 14s4 18 25 18Z"/>
+        <path class="f" d="M33 30c7-16 21-22 25-16s-4 18-25 18Z"/>
+        <path class="f" d="M31 34C14 34 10 46 16 50s13-4 15-14Z"/>
+        <path class="f" d="M33 34c17 0 21 12 15 16s-13-4-15-14Z"/>
+        <path d="M32 22v28" stroke-width="3"/>
+        <path d="M32 22c-2-6-5-9-8-10M32 22c2-6 5-9 8-10"/>
+      </svg>
+    </div>
+  </div>
+  <div class="group" aria-label="factory sessions">
+    <!-- factory robot -->
+    <div class="light robot" id="light-factory" title="Factory session">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M32 6v6"/><circle class="f" cx="32" cy="5" r="3"/>
+        <rect x="20" y="12" width="24" height="16" rx="3"/>
+        <circle class="f" cx="27" cy="20" r="2.5"/><circle class="f" cx="37" cy="20" r="2.5"/>
+        <rect x="18" y="31" width="28" height="18" rx="2"/>
+        <path d="M18 36H9v10M46 36h9v10M6 46h6M52 46h6"/>
+        <path d="M24 49v7M40 49v7M18 57h28" stroke-width="3"/>
+      </svg>
+    </div>
+    <!-- winged robot (SAINT) -->
+    <div class="light robot" id="light-saint" title="SAINT session">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <ellipse cx="32" cy="6" rx="8" ry="2.5"/>
+        <rect x="23" y="12" width="18" height="14" rx="3"/>
+        <circle class="f" cx="28" cy="19" r="2.2"/><circle class="f" cx="36" cy="19" r="2.2"/>
+        <rect x="24" y="29" width="16" height="18" rx="2"/>
+        <path class="f" d="M22 32C14 24 6 24 2 28c4 2 6 6 6 10 4-2 9-2 14 0Z"/>
+        <path class="f" d="M42 32c8-8 16-8 20-4-4 2-6 6-6 10-4-2-9-2-14 0Z"/>
+        <path d="M28 47v9M36 47v9" stroke-width="3"/>
+      </svg>
+    </div>
+  </div>
+</div>
+<p class="caption" id="caption"></p>
+
+<!-- Task 033: this panel's placeholder is replaced by data via window.boardMeter(json); the page is not restructured. -->
+<section id="meter-panel">
+  <h2>Meter</h2>
+  <p id="meter-body">Projection meter — pending task 033</p>
+</section>
+
+<section>
+  <h2>Recent events</h2>
+  <ol id="events"></ol>
+</section>
+
+<script>
+// BEGIN lightsFor
+// Pure: maps a /status JSON object to the six lights. Unknown lanes/rulesets and idle light nothing.
+function lightsFor(status) {
+  var lane = status && status.lane ? status.lane.active : null;
+  var ruleset = status && status.session ? status.session.ruleset : null;
+  return {
+    input: lane === "input",
+    hangglider: lane === "hangglider",
+    grasshopper: lane === "grasshopper",
+    butterfly: lane === "butterfly",
+    factory: ruleset === "factory",
+    saint: ruleset === "saint"
+  };
+}
+// END lightsFor
+
+var LIGHTS = ["input", "hangglider", "grasshopper", "butterfly", "factory", "saint"];
+var POLL_MS = 5000;
+
+// Stub for task 033: receives the /status JSON each good poll; it will fill #meter-panel.
+window.boardMeter = function (json) {};
+
+function render(status) {
+  var on = lightsFor(status);
+  LIGHTS.forEach(function (name) {
+    document.getElementById("light-" + name).classList.toggle("on", on[name]);
+  });
+  var bits = [];
+  if (status.lane && status.lane.active) bits.push("lane: " + status.lane.active + " since " + status.lane.since);
+  if (status.session) bits.push(status.session.ruleset + " session " + status.session.name + " — " + status.session.phase);
+  document.getElementById("caption").textContent = bits.length ? bits.join(" · ") : "idle";
+  var list = document.getElementById("events");
+  list.textContent = "";
+  (status.events || []).forEach(function (e) { // delivered newest first; shown in that order
+    var li = document.createElement("li");
+    var t = document.createElement("time");
+    t.textContent = e.t;
+    var k = document.createElement("span");
+    k.className = "k";
+    k.textContent = e.kind;
+    var l = document.createElement("span");
+    l.textContent = e.label;
+    li.append(t, k, l);
+    list.appendChild(li);
+  });
+  document.getElementById("updated").textContent = "updated " + status.generated_at;
+}
+
+function poll() {
+  fetch("/status", { cache: "no-store" })
+    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function (status) {
+      render(status);
+      document.body.classList.remove("nosignal");
+      window.boardMeter(status);
+    })
+    .catch(function () { document.body.classList.add("nosignal"); })
+    .finally(function () { setTimeout(poll, POLL_MS); });
+}
+
+poll();
+</script>
+</body>
+</html>

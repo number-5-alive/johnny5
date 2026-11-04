@@ -1,0 +1,29 @@
+{
+  "seat": "qwen-local",
+  "model": "qwen3.6:27b",
+  "started": "2026-10-31T19:28:33-05:00",
+  "finished": "2026-10-31T19:29:24-05:00",
+  "in_tokens": 76,
+  "out_tokens": 4000,
+  "cost_usd": 0.0,
+  "cost_source": "local-free",
+  "exit": "capped",
+  "requested_model": "qwen3.6:27b",
+  "endpoint": "http://127.0.0.1:11434/api/chat",
+  "think": false,
+  "temperature": 0.2,
+  "seed": 9,
+  "num_predict": 4000,
+  "max_in_tokens": 24000,
+  "cap_exceeded": false,
+  "done_reason": "length",
+  "timings": {
+    "wall_s": 51.641,
+    "total_s": 51.639,
+    "load_s": 0.002,
+    "prompt_eval_s": 0.218,
+    "eval_s": 51.27,
+    "queue_wait_s": 0.002
+  },
+  "out_cap_hit": true
+}

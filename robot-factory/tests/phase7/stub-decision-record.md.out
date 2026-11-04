@@ -1,0 +1,121 @@
+# SAINT decision record: 931-two
+
+> This record states agreement reached in a SAINT session, not verification. Consensus here is agreement only: nothing in it was run, tested or checked, and it carries no verified stamp and no Grasshopper stamp.
+
+*Assembled by bin/scribe.py on 2026-11-02T10:16:58-06:00 from `sessions/931-two/`. The scribe holds no vote.*
+
+## Header
+
+- Agenda: Should the room pilot a four-day week before any wage change? (AGENDA line)
+- Ruleset: `saint` (budget section `saint`, word-only: yes)
+- Status: **round_cap**: round cap 2 reached. Rounds allowed 2, rounds held 2.
+
+### Seats and capacities
+
+| Seat | Capacity | Vote |
+|---|---|---|
+| `claude_code` | proposer | votes |
+| `qwen_local` | challenger | votes |
+| `claude_code` | chair | votes |
+| `qwen_local` | scribe: Johnny (qwen_local), bin/scribe.py through seats/qwen_local.sh (local) | no vote |
+
+### Commission
+
+From `sessions/931-two/brief.md`, verbatim:
+
+```markdown
+RULESET: saint
+SEAT proposer: claude_code
+SEAT challenger: qwen_local
+SEAT chair: claude_code
+MAX_ROUNDS: 2
+AGENDA: Should the room pilot a four-day week before any wage change?
+SCRIBE: johnny
+
+Write a short test page about stubs.
+```
+
+## Positions by round (verbatim)
+
+### Round 0: opening
+
+#### proposer (`claude_code`)
+
+```markdown
+Position: the room should pilot a four-day week before any wage change.
+```
+
+### Round 1
+
+#### challenger (`qwen_local`)
+
+```markdown
+P1: The pilot has no stated length.
+P2: Wage effects are ignored entirely.
+```
+
+#### chair (`claude_code`)
+
+```markdown
+=== MERGE RECORD ===
+P1: ACCEPT - the pilot needs a stated length; six months added.
+P2: REJECT - wages are out of scope for the pilot question.
+=== ARTIFACT ===
+Position: pilot a four-day week for six months before any wage change.
+```
+
+### Round 2
+
+Standings in front of the seats: `sessions/931-two/r2-standings.md` (record, not opinion; no vote).
+
+#### challenger (`qwen_local`)
+
+```markdown
+P1: I still hold that wage effects must be in the pilot (re-raised).
+```
+
+#### chair (`claude_code`)
+
+```markdown
+=== MERGE RECORD ===
+P1: REJECT - the six-month length already answers it.
+=== ARTIFACT ===
+Position: pilot a four-day week for six months before any wage change; review at the end.
+```
+
+## Agreements (accepted by the chair)
+
+- Round 1 P1: The pilot has no stated length.  
+  Accepted: the pilot needs a stated length; six months added.
+
+## Disagreements (rejected by the chair)
+
+- Round 1 P2: Wage effects are ignored entirely.  
+  Rejected: wages are out of scope for the pilot question.
+- Round 2 P1: I still hold that wage effects must be in the pilot (re-raised).  
+  Rejected: the six-month length already answers it.
+
+## Dissent (preserved)
+
+Objections the chair rejected, in the challenger's own words. They stand in the record beside the synthesis; agreement in the room does not erase them.
+
+> Round 1 P2 (challenger, `qwen_local`): Wage effects are ignored entirely.
+> Round 2 P1 (challenger, `qwen_local`): I still hold that wage effects must be in the pilot (re-raised).
+
+## Chair's synthesis
+
+The chair's last restated position, `r2-chair-v3.md`, verbatim. It is agreement reached in this room, not verification.
+
+```markdown
+Position: pilot a four-day week for six months before any wage change; review at the end.
+```
+
+## Standings turns
+
+- `sessions/931-two/r2-standings.md` (copy of `records/931-two-r2-standings.md`)
+
+---
+
+A record, not an endorsement. The scribe holds no vote.
+
+SAINT decision record: agreement, not verification.

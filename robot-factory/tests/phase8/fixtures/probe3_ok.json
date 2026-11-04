@@ -1,0 +1,17 @@
+{
+ "status": 200,
+ "body": {
+  "model": "jev-1.14.0",
+  "answers": {
+   "q1": {
+    "type": "noul",
+    "noul": 0.92
+   }
+  },
+  "usage": {
+   "input_tokens": 284,
+   "output_tokens": 21
+  }
+ },
+ "source": "work/016-probe/probe3.record.json response.body_json, verbatim (REAL)"
+}

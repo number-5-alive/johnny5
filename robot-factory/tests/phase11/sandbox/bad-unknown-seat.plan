@@ -1,0 +1,6 @@
+ruleset: saint
+rounds: 1
+seats:
+  - seat: hal9000
+    roles: [chair]
+    calls: 1

@@ -1,9 +1,10 @@
 """Stage 6: OpenAI-compatible chat service over the shipping pipeline (DESIGN.md, stage 6 decisions).
 
 Models:
-  laya-qwen-verified  stage 2.1 retrieval (k = 15) + 5-draft agreement; verified / guess / decline label
-  laya-qwen-fast      stage 2.1 retrieval, one answer, labelled "not cross-checked"
-  qwen-plain          qwen3.6 with thinking, no retrieval, labelled "not fact-checked"
+  grasshopper  stage 2.1 retrieval (k = 15) + 5-draft agreement; verified / guess / decline label
+  butterfly      stage 2.1 retrieval, one answer, labelled "not cross-checked"
+  input          qwen3.6 with thinking, no retrieval, labelled "not fact-checked"
+  hangglider     bare qwen3.6, 5-draft novelty panel + reassessment, five-fold card, no stamp (hangglider.py)
   qwen-quick          qwen3.6 without thinking, for Open WebUI's background tasks (titles, tags); bypasses the queue
 
 One request runs at a time; waiting requests stream "Queued (n ahead)". The 10-minute limit starts when a request
@@ -24,7 +25,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from . import ollama, pipelines, tracing
+from . import code_shelf, hangglider, ollama, pipelines, status_endpoint, tracing
 
 CONFIG_PATH = Path(os.environ.get("LAYA_QWEN_SERVICE_CONFIG", "~/laya-data/service.json")).expanduser()
 LOG_DIR = Path(os.environ.get("LAYA_QWEN_SERVICE_LOG", "~/laya-data/service-log")).expanduser()
@@ -35,11 +36,13 @@ K = 15
 SNAPSHOT_STAMP = "Wikipedia snapshot 2026-10-01"
 
 MODELS = {
-    "laya-qwen-verified": "Verified: Wikipedia + 5-draft agreement (~90 s)",
-    "laya-qwen-fast": "Fast: Wikipedia, one answer, not cross-checked (~26 s)",
-    "qwen-plain": "Plain qwen3.6: no retrieval, not fact-checked",
+    "grasshopper": "Grasshopper (verified): Wikipedia snapshot 2026-10-01 + 5-draft agreement (~90 s)",
+    "butterfly": "Butterfly (fast): Wikipedia, one draft, not cross-checked (~26 s)",
+    "input": "Input: bare qwen3.6, no retrieval, not fact-checked",
+    "hangglider": "Hang glider (novelty): bare qwen3.6, 5-draft spread, most novel direction; no stamp, no truth claim",
     "qwen-quick": "qwen3.6 without thinking, for background tasks",
 }
+CARD_MODES = {"hangglider"}  # output is a fixed-shape card: no progress or queue <details> block is streamed
 
 REWRITE_PROMPT = """Here is a conversation between a user and an assistant.
 
@@ -57,6 +60,7 @@ Message: {question}"""
 ROUTE_SCHEMA = {"type": "object", "properties": {"factual": {"type": "boolean"}}, "required": ["factual"]}
 
 app = FastAPI(title="laya-qwen")
+app.include_router(status_endpoint.router)
 _turns: list[str] = []  # request ids waiting or running, in arrival order; index 0 is the one executing
 _turn_change = asyncio.Event()
 _log_lock = threading.Lock()
@@ -162,9 +166,10 @@ def footer(status: str, hits=None, heading: str = "Sources") -> str:
     return "\n\n---\n" + "\n\n".join(p for p in parts if p)
 
 
-MODES = {"laya-qwen-verified": "verified", "laya-qwen-fast": "fast", "qwen-plain": "plain"}
+MODES = {"grasshopper": "verified", "butterfly": "fast", "input": "plain", "hangglider": "novelty"}
 OUTCOMES = {"agreed_answer": "verified", "unverified_guess": "guess", "cluster_error": "guess",
-            "agreed_decline": "no reliable answer", "all_declined": "no reliable answer", "fast": "not cross-checked"}
+            "agreed_decline": "no reliable answer", "all_declined": "no reliable answer", "fast": "not cross-checked",
+            "hangglider": "no stamp (novelty triage)"}
 
 
 def run_job(model: str, messages: list[dict], say, entry: dict, started: float) -> str:
@@ -187,11 +192,23 @@ def run_job(model: str, messages: list[dict], say, entry: dict, started: float) 
 
 
 def _answer(model: str, messages: list[dict], say, entry: dict, started: float, cfg: dict, tr, trace_info: dict) -> str:
-    if model == "qwen-plain":
+    if model == "input":
         return plain_answer(messages, tr=tr) + footer("ℹ️ Plain qwen: not fact-checked")
+    if model == "hangglider":  # bare model by design: no routing, no retrieval, no agreement check, no stamp
+        request = [m for m in messages if m["role"] == "user"][-1]["content"].strip()
+        entry["question"] = request
+        with tracing.span(tr, "hangglider", "CHAIN", input__value=request) as sp:
+            card, record, path = hangglider.run(request, say)
+            sp.set(output__value=card, laya__record=str(path))
+        entry.update(route="hangglider", hangglider_record=str(path), decision="hangglider")
+        return card
 
     question = standalone_question(messages, say, entry, tr)
     entry["question"] = question
+    if model == "grasshopper" and code_shelf.enabled():  # task 031b; flag off -> this block is skipped entirely
+        out = _code_shelf_answer(question, say, entry, started, cfg, tr, trace_info)
+        if out is not None:
+            return out
     if not is_factual(question, entry, tr):
         entry["route"] = "plain"
         say("Not a lookup question: answering with plain qwen")
@@ -212,7 +229,7 @@ def _answer(model: str, messages: list[dict], say, entry: dict, started: float, 
     entry["passages"] = pipelines.passages_meta(hits)
     say(f"Retrieved {len(hits)} passages from {len({p.url for p in hits})} Wikipedia articles")
 
-    if model == "laya-qwen-fast":
+    if model == "butterfly":
         say("Writing the answer")
         msgs = pipelines.rag_messages(question, hits)
         with tracing.span(tr, "draft", "LLM", laya__draft_index=1) as sp:
@@ -264,6 +281,57 @@ def _answer(model: str, messages: list[dict], say, entry: dict, started: float, 
     return out
 
 
+def _code_shelf_answer(question: str, say, entry: dict, started: float, cfg: dict, tr, trace_info: dict) -> str | None:
+    """Grasshopper over the code shelf (task 031b; UNVERIFIED source, commissioner's override of the 030b gate).
+
+    Returns None to continue on the unwired path: for non-programming questions, and on any shelf error, timeout or
+    empty result (recorded in entry["code_shelf_fallback"]). The agreement rule is unchanged; the shelf never votes."""
+    try:
+        kind = code_shelf.classify(question)
+    except Exception as e:
+        entry["code_shelf_fallback"] = {"reason": "classify_error", "error": f"{type(e).__name__}: {e}"}
+        return None
+    if kind == "none":
+        return None
+    say("Programming question: searching the code shelf (unverified source)")
+    try:
+        passages, meta = code_shelf.select(question, kind)
+    except code_shelf.CodeShelfFallback as e:
+        entry["code_shelf_fallback"] = {"reason": e.reason, "error": e.error, "kind": kind}
+        say("Code shelf unavailable: using the usual path")
+        return None
+    except Exception as e:  # never let the shelf fail the request
+        entry["code_shelf_fallback"] = {"reason": "shelf_error", "error": f"{type(e).__name__}: {e}", "kind": kind}
+        say("Code shelf unavailable: using the usual path")
+        return None
+    entry["route"] = "code"
+    entry["code_shelf"] = "unverified"
+    entry["code_shelf_meta"] = meta
+    say(f"Using {len(passages)} code-shelf passages chosen by the librarian from the shelf's top {len(meta['top15'])}")
+
+    budget = LIMIT_SECONDS - (time.monotonic() - started) - GROUPING_RESERVE
+    drafts = code_shelf.generate_drafts(question, passages, deadline=max(budget, 0),
+                                        on_draft=lambda i, n: say(f"Draft {i}/{n} written"))
+    texts = [d.content for d in drafts]
+    if len(drafts) < pipelines.N_DRAFTS:
+        say(f"Time limit: stopped after {len(drafts)} drafts")
+    say("Comparing drafts")
+    with tracing.span(tr, "agreement", "CHAIN", input__value=question) as sp:
+        try:
+            answers, groups = pipelines.cluster(question, texts)
+            failed = False
+        except Exception as e:
+            answers, groups, failed = [None] * len(texts), [], True
+            entry["cluster_error"] = f"{type(e).__name__}: {e}"
+        decision, text, verified, chosen = pipelines.decide(texts, answers, groups, failed)
+        n, top, declined = len(texts), len(groups[0]) if groups else 0, sum(a is None for a in answers)
+        fraction = round((declined if decision in ("agreed_decline", "all_declined") else top) / n, 3) if n else None
+        sp.set(laya__decision=decision, laya__agreement_fraction=fraction, laya__code_shelf="unverified")
+    entry.update(drafts=texts, answers=answers, groups=groups, decision=decision, chosen_draft=chosen)
+    trace_info["agreement_fraction"] = fraction
+    return _compose(decision, text, texts, chosen, n, top, declined, None, cfg) + "\n\n" + code_shelf.provenance_block(passages)
+
+
 def _compose(decision, text, texts, chosen, n, top, declined, hits, cfg) -> str:
     if decision == "agreed_answer":
         return text + footer(f"✅ Verified ({top}/{n} drafts agree)", hits)
@@ -312,7 +380,8 @@ async def produce(model: str, messages: list[dict]):
         yield text
         return
 
-    show_progress = model != "qwen-plain"
+    show_progress = model != "input" and model not in CARD_MODES
+    show_queue = model not in CARD_MODES  # a queue block would add a fourth <details> to the card
     opened = False
 
     def open_block():
@@ -323,7 +392,7 @@ async def produce(model: str, messages: list[dict]):
     try:
         last_note = 0.0
         while _turns[0] != rid:
-            if time.monotonic() - last_note > 10:
+            if show_queue and time.monotonic() - last_note > 10:
                 if not opened:
                     yield open_block()
                     opened = True
@@ -342,7 +411,7 @@ async def produce(model: str, messages: list[dict]):
         def say(msg: str) -> None:
             loop.call_soon_threadsafe(notes.put_nowait, msg)
 
-        fut = loop.run_in_executor(None, run_job, model, messages, say, entry, started)
+        fut = loop.run_in_executor(None, status_endpoint.observed(run_job), model, messages, say, entry, started)
         if show_progress and not opened:
             yield open_block()
             opened = True
@@ -387,7 +456,7 @@ async def health():
 @app.post("/v1/chat/completions")
 async def chat_completions(request: Request):
     body = await request.json()
-    model = body.get("model", "laya-qwen-verified")
+    model = body.get("model", "grasshopper")
     if model not in MODELS:
         return JSONResponse({"error": {"message": f"unknown model {model}", "type": "invalid_request_error"}}, 404)
     messages = clean_messages(body.get("messages", []))

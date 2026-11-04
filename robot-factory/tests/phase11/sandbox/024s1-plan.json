@@ -1,0 +1,1 @@
+{"ruleset": "saint", "rounds": 3, "seats": [{"seat": "claude_code", "roles": ["proposer", "chair"], "calls": 4}, {"seat": "codex", "roles": ["challenger"], "calls": 3}]}
