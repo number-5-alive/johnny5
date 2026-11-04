@@ -174,7 +174,8 @@ says so by showing where it came from.
 
 Beside the answering system sits a second body, added in November
 2026: a room where the large hosted models do supervised work. It is
-one room with two rulesets, the Robot Factory and SAINT, sharing the
+one room with two rulesets, the Robot Factory and S.A.I.N.T.
+(System for Aligned Intelligence and Negotiated Truth), sharing the
 same benches, the same seat contract, the same task queue, the same
 ledger, the same spending caps, the same moderator, and the same
 scribe. The ruleset decides what circulates and what comes out:
@@ -183,10 +184,10 @@ scribe. The ruleset decides what circulates and what comes out:
   An artifact circulates through solo, cross-critique, and merge
   rounds, and what comes out is a labelled draft revision with a
   change record. The Factory never answers questions.
-- **SAINT** (System for Aligned Intelligence and Negotiated Truth)
+- **S.A.I.N.T.** (System for Aligned Intelligence and Negotiated Truth)
   deliberates a question. Frontier models propose, challenge, and
   revise across rounds, and what comes out is a decision record.
-  SAINT consensus is agreement, not verification. It never carries
+  S.A.I.N.T. consensus is agreement, not verification. It never carries
   Grasshopper's verified stamp, because a room agreeing is not the
   same thing as evidence agreeing, and this project keeps those two
   stamps apart on purpose.
@@ -207,16 +208,25 @@ never drafts, never deliberates, and never certifies anything.
 the seats, tallies the results, enforces the caps and the gates, and
 reviews the output against pass marks that were written before the
 work started. The moderator drafts nothing and votes on nothing. In
-this deployment the chair is held by an AI agent; the chair is a role
-with rules, not a person, and the section on making this your own
-says more about that.
+this deployment the chair is held by Alex, a Muse agent: an AI
+interpreter between the commissioner and the seats. That word is
+load-bearing. The seats are not colleagues you can brief in plain
+language; one of them is a probability instrument that answers only
+typed questions with numbers, and none of them knows what you meant,
+only what it was sent. Nobody is expected to delegate to Jev
+directly. You tell the interpreter what you are trying to decide or
+build, in ordinary words, and the interpreter translates it into
+seat-sized work, runs the rounds, and brings the results back as a
+tally and a record you can read. The chair is a role with rules, not
+a person, and the section on making this your own says more about
+that.
 
 **The scribe.** Johnny takes the minutes in both rulesets. The
 records, decision records, gate reports, and standings, are filed on
 his own shelves afterwards, as records rather than endorsements, and
 become part of the local material he can draw on later.
 
-### The first SAINT session
+### The first S.A.I.N.T. session
 
 The first full session ran on November 1, 2026, on the agenda "the
 next economic system in the world of automation." One seat proposed,
@@ -230,7 +240,7 @@ income floor, and an elected, recallable board, phased in over about
 twenty years. The session cost $0.38 against its session cap. The
 full decision record ships in this repo
 ([`robot-factory/records/024s1-saint-economics-decision-record.md`](robot-factory/records/024s1-saint-economics-decision-record.md)),
-stamped, as every SAINT record is, agreement-not-verification.
+stamped, as every S.A.I.N.T. record is, agreement-not-verification.
 
 ## The constitution: money, approvals, and tests
 
@@ -244,9 +254,10 @@ separately and never summed into one number: subscription seats,
 paced against their plan's allowance; API seats, counted in real
 dollars; and the local model, which is free. The caps are read from
 `robot-factory/budget.yaml` at run time: a Factory session reports
-against a $10 cap, a SAINT session against $6.50, no session runs
-more than 3 rounds, and two ceilings sit over everything, $50 a month
-across all bodies and $25 a month for API spending. Where a budget
+against a $10 cap, a S.A.I.N.T. session against $6.50, no session runs
+more than 3 rounds, and two ceilings sit over everything, $75 a month
+across all bodies (raised from $50 on November 2, 2026) and $25 a
+month for API spending. Where a budget
 flag is not a hard stop, the machinery hands the seat a reduced cap
 and keeps a reserve back, so a single runaway request cannot spend
 the difference.
@@ -272,26 +283,26 @@ the project: every changed expectation has to cite the dated ruling
 that caused it, and a check may never be made to pass by emptying
 what it asserts. One failure found along the way is recorded rather
 than smoothed over: raising the safety reserve for single tasks had
-silently made ordinary SAINT rooms unaffordable under their session
-cap, which is why the SAINT cap now stands at $6.50.
+silently made ordinary S.A.I.N.T. rooms unaffordable under their session
+cap, which is why the S.A.I.N.T. cap now stands at $6.50.
 
 ## The status board and the projection meter
 
 A small status board shows what the system is doing at a glance. Six
 indicator lights, one per function: the 5, hang glider, grasshopper,
-butterfly, the factory robot, and a winged robot for SAINT. A light
+butterfly, the factory robot, and a winged robot for S.A.I.N.T. A light
 is lit while its function is active. The board is fed by a read-only
 `/status` endpoint on the service; it can observe the system, and it
 cannot steer it.
 
-Before a Factory or SAINT session starts, `budget.py project` prints
+Before a Factory or S.A.I.N.T. session starts, `budget.py project` prints
 the run's expected shape: every seat at play, how much it is expected
 to use based on the ledger's history, and its worst case at the caps,
 each in its own billing class and never summed. The meter exists so a
 session's cost is a thing you look at before you spend it, the same
 way the ledger makes it a thing you can audit afterwards. Its first
 containment check passed honestly and widely: projecting a recorded
-SAINT session's plan gave a band of $0.31 to $6.48 against an actual
+S.A.I.N.T. session's plan gave a band of $0.31 to $6.48 against an actual
 of $0.38. The band sharpens as the ledger grows; on a young ledger
 the meter says so by being wide.
 
@@ -304,7 +315,7 @@ the meter says so by being wide.
 - `robot-factory/`: the room. The task queue and runner, the budget
   and approval machinery, the seat adapters and registry, the
   rulesets, the test suites, and the session records, including the
-  first SAINT decision record.
+  first S.A.I.N.T. decision record.
 - `deploy/`: systemd units and service configuration, as templates.
 - `scripts/`: evaluation runners, retrieval probes, and smoke tests.
 - `maps/`: helpers for the experimental maps shelf.
@@ -335,9 +346,11 @@ about it are deliberately loose:
 
 - **The moderator is a chair, not a person.** The job is a set of
   written procedures: frame, distribute, tally, enforce, review. An
-  AI agent holds the chair in this deployment. A different agent can
-  hold it in yours, or a patient human can, more slowly. Whoever sits
-  there is bound by the same limits: no drafting, no voting.
+  AI agent holds the chair in this deployment: Alex, a Muse agent,
+  working as the commissioner's interpreter to the seats. A different
+  agent can hold it in yours, or a patient human can, more slowly.
+  Whoever sits there is bound by the same limits: no drafting, no
+  voting.
 - **Seats are configuration.** A seat is a registry entry plus a
   small adapter. Models are replaceable parts, and they are expected
   to be replaced: new ones arrive every year, and the registry is
