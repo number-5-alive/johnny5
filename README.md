@@ -317,6 +317,12 @@ external components are the hands, tools today and robots
 eventually, working under receipts and vetoes like everything
 else here.
 
+Why not simply ask one big model? A single intelligence can't
+check itself; it can only agree with itself at higher speed.
+The two halves, the room, and the preserved dissent exist so
+that disagreement has somewhere to live — and the human can
+read it.
+
 ## The constitution: money, approvals, and tests
 
 The room runs on machinery whose whole job is to keep enthusiasm
